@@ -128,7 +128,7 @@ Rectangle {
             Item { Layout.fillWidth: true }
 
             Button {
-                text: "\u25B6  Play Pronunciation"
+                text: "\u25B6  Pronunciation"
                 enabled: audioSource.toString() !== ""
                 onClicked: {
                     audioErrorLabel.visible = false;
