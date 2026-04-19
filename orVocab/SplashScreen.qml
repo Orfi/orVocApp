@@ -3,8 +3,8 @@ import QtQuick.Controls
 
 Window {
     id: splash
-    width: 600
-    height: 400
+    width: 300
+    height: 200
     visible: true
     flags: Qt.SplashScreen | Qt.WindowStaysOnTopHint
     color: "#2196F3"
