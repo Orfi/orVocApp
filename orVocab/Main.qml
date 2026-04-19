@@ -9,7 +9,7 @@ ApplicationWindow {
     width: 900
     height: 600
     visible: true
-    title: "orVocab"
+    title: "orVocApp"
 
     property string currentWord: ""
 
@@ -32,7 +32,7 @@ ApplicationWindow {
             anchors.rightMargin: 8
 
             Label {
-                text: "orVocab"
+                text: "orVocApp"
                 font.bold: true
                 Layout.fillWidth: true
             }
