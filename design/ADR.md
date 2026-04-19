@@ -23,3 +23,9 @@
 
 ## ADR 006: Arabic Support
 - **Decision**: Inline HTML `dir="rtl"` tags within QML `RichText`.
+
+## Jira Ticket (epic)
+https://welorfi.atlassian.net/jira/software/projects/RVC/boards/46?selectedIssue=RVC-1
+Epic Id: RVC-1
+## Git branch
+epic/RVC-1-Basic-Structure

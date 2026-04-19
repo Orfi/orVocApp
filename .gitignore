@@ -1,3 +1,6 @@
+# Build directories
+build/
+
 # C++ objects and libs
 *.slo
 *.lo
@@ -52,3 +55,10 @@ compile_commands.json
 *creator.user*
 
 *_qmlcache.qrc
+
+# Superpowers brainstorm sessions
+.superpowers/
+
+# Allow build/package scripts (overrides *build-* pattern above)
+!build-package.sh
+!build-package.bat
