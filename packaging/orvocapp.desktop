@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=orVocApp
+Comment=Personal vocabulary builder with English definitions and Arabic translations
+Exec=orvocapp
+Icon=orvocapp
+Categories=Education;Utility;
+Terminal=false

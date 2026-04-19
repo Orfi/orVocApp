@@ -58,3 +58,7 @@ compile_commands.json
 
 # Superpowers brainstorm sessions
 .superpowers/
+
+# Allow build/package scripts (overrides *build-* pattern above)
+!build-package.sh
+!build-package.bat
