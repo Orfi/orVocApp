@@ -2,7 +2,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import QtQuick.Dialogs
+import Qt.labs.platform as Platform
 
 ApplicationWindow {
     id: root
@@ -83,39 +83,39 @@ ApplicationWindow {
         }
     }
 
-    // File dialogs
-    FileDialog {
+    // File dialogs (Qt.labs.platform avoids portal freeze on Linux)
+    Platform.FileDialog {
         id: importJsonDialog
         title: "Import JSON Word List"
-        fileMode: FileDialog.OpenFile
+        fileMode: Platform.FileDialog.OpenFile
         nameFilters: ["JSON files (*.json)"]
         onAccepted: confirmImportDialog.open()
     }
 
-    FileDialog {
+    Platform.FileDialog {
         id: importTextDialog
         title: "Import Text Word List"
-        fileMode: FileDialog.OpenFile
+        fileMode: Platform.FileDialog.OpenFile
         nameFilters: ["Text files (*.txt)"]
-        onAccepted: VocabManager.importText(importTextDialog.selectedFile)
+        onAccepted: VocabManager.importText(importTextDialog.file)
     }
 
-    FileDialog {
+    Platform.FileDialog {
         id: exportJsonDialog
         title: "Export JSON Word List"
-        fileMode: FileDialog.SaveFile
+        fileMode: Platform.FileDialog.SaveFile
         defaultSuffix: "json"
         nameFilters: ["JSON files (*.json)"]
-        onAccepted: VocabManager.exportJson(exportJsonDialog.selectedFile)
+        onAccepted: VocabManager.exportJson(exportJsonDialog.file)
     }
 
-    FileDialog {
+    Platform.FileDialog {
         id: exportTextDialog
         title: "Export Text Word List"
-        fileMode: FileDialog.SaveFile
+        fileMode: Platform.FileDialog.SaveFile
         defaultSuffix: "txt"
         nameFilters: ["Text files (*.txt)"]
-        onAccepted: VocabManager.exportText(exportTextDialog.selectedFile)
+        onAccepted: VocabManager.exportText(exportTextDialog.file)
     }
 
     Dialog {
@@ -130,6 +130,6 @@ ApplicationWindow {
                   + VocabManager.words.length + " words. Continue?"
         }
 
-        onAccepted: VocabManager.importJson(importJsonDialog.selectedFile)
+        onAccepted: VocabManager.importJson(importJsonDialog.file)
     }
 }

@@ -1,4 +1,4 @@
-find_package(Qt6 REQUIRED COMPONENTS Quick Network Multimedia QuickDialogs2)
+find_package(Qt6 REQUIRED COMPONENTS Quick Network Multimedia QuickDialogs2 Widgets)
 
 qt_standard_project_setup(REQUIRES 6.8)
 
@@ -41,6 +41,7 @@ target_link_libraries(orVocApp
         Qt6::Network
         Qt6::Multimedia
         Qt6::QuickDialogs2
+        Qt6::Widgets
 )
 
 include(GNUInstallDirs)
@@ -70,28 +71,18 @@ get_filename_component(QT_LIB_DIR "${_qt_core_loc}" DIRECTORY)
 get_filename_component(QT_ROOT_DIR "${QT_LIB_DIR}" DIRECTORY)
 set(QT_PLUGIN_DIR "${QT_ROOT_DIR}/plugins")
 
-set(QT_BUNDLED_LIBS
-    "${QT_LIB_DIR}/libQt6Core.so.6"
-    "${QT_LIB_DIR}/libQt6Gui.so.6"
-    "${QT_LIB_DIR}/libQt6Quick.so.6"
-    "${QT_LIB_DIR}/libQt6Qml.so.6"
-    "${QT_LIB_DIR}/libQt6QmlModels.so.6"
-    "${QT_LIB_DIR}/libQt6Network.so.6"
-    "${QT_LIB_DIR}/libQt6Multimedia.so.6"
-    "${QT_LIB_DIR}/libQt6QuickControls2.so.6"
-    "${QT_LIB_DIR}/libQt6QuickDialogs2.so.6"
-    "${QT_LIB_DIR}/libQt6QuickDialogs2QuickImpl.so.6"
-    "${QT_LIB_DIR}/libQt6QuickDialogs2Utils.so.6"
-    "${QT_LIB_DIR}/libQt6QuickLayouts.so.6"
-    "${QT_LIB_DIR}/libQt6QuickTemplates2.so.6"
-    "${QT_LIB_DIR}/libQt6OpenGL.so.6"
-    "${QT_LIB_DIR}/libQt6DBus.so.6"
-    "${QT_LIB_DIR}/libQt6XcbQpa.so.6"
-    "${QT_LIB_DIR}/libQt6WaylandClient.so.6"
-    "${QT_LIB_DIR}/libicui18n.so.73"
-    "${QT_LIB_DIR}/libicuuc.so.73"
-    "${QT_LIB_DIR}/libicudata.so.73"
+# Glob all Qt6 and ICU shared libs — avoids missing transitive deps
+file(GLOB QT_BUNDLED_LIBS
+    "${QT_LIB_DIR}/libQt6*.so.6"
+    "${QT_LIB_DIR}/libicu*.so.*"
 )
+# Also grab FFmpeg and multimedia support libs bundled with Qt
+file(GLOB QT_FFMPEG_LIBS
+    "${QT_LIB_DIR}/libav*.so.*"
+    "${QT_LIB_DIR}/libsw*.so.*"
+    "${QT_LIB_DIR}/libQt6FFmpeg*.so.*"
+)
+list(APPEND QT_BUNDLED_LIBS ${QT_FFMPEG_LIBS})
 foreach(_lib ${QT_BUNDLED_LIBS})
     if(EXISTS "${_lib}")
         get_filename_component(_real_lib "${_lib}" REALPATH)
@@ -113,5 +104,68 @@ set(QT_PLATFORM_PLUGINS
 foreach(_plugin ${QT_PLATFORM_PLUGINS})
     if(EXISTS "${_plugin}")
         install(FILES "${_plugin}" DESTINATION ${CMAKE_INSTALL_LIBDIR}/orvocapp/plugins/platforms)
+    endif()
+endforeach()
+
+# XCB GL integration plugins (required for OpenGL context on X11)
+set(QT_XCB_GL_PLUGINS
+    "${QT_PLUGIN_DIR}/xcbglintegrations/libqxcb-egl-integration.so"
+    "${QT_PLUGIN_DIR}/xcbglintegrations/libqxcb-glx-integration.so"
+)
+foreach(_plugin ${QT_XCB_GL_PLUGINS})
+    if(EXISTS "${_plugin}")
+        install(FILES "${_plugin}" DESTINATION ${CMAKE_INSTALL_LIBDIR}/orvocapp/plugins/xcbglintegrations)
+    endif()
+endforeach()
+
+# TLS plugin (required for HTTPS API calls)
+if(EXISTS "${QT_PLUGIN_DIR}/tls/libqopensslbackend.so")
+    install(FILES "${QT_PLUGIN_DIR}/tls/libqopensslbackend.so"
+            DESTINATION ${CMAKE_INSTALL_LIBDIR}/orvocapp/plugins/tls)
+endif()
+
+# Multimedia plugins (ffmpeg backend)
+if(EXISTS "${QT_PLUGIN_DIR}/multimedia/libffmpegmediaplugin.so")
+    install(FILES "${QT_PLUGIN_DIR}/multimedia/libffmpegmediaplugin.so"
+            DESTINATION ${CMAKE_INSTALL_LIBDIR}/orvocapp/plugins/multimedia)
+endif()
+
+# Platform input context plugins
+set(QT_INPUT_PLUGINS
+    "${QT_PLUGIN_DIR}/platforminputcontexts/libcomposeplatforminputcontextplugin.so"
+    "${QT_PLUGIN_DIR}/platforminputcontexts/libibusplatforminputcontextplugin.so"
+)
+foreach(_plugin ${QT_INPUT_PLUGINS})
+    if(EXISTS "${_plugin}")
+        install(FILES "${_plugin}" DESTINATION ${CMAKE_INSTALL_LIBDIR}/orvocapp/plugins/platforminputcontexts)
+    endif()
+endforeach()
+
+# QML modules -> /usr/lib/orvocapp/qml/
+set(QT_QML_DIR "${QT_ROOT_DIR}/qml")
+set(QT_QML_MODULES
+    "QtQuick"
+    "QtQuick/Controls"
+    "QtQuick/Controls/impl"
+    "QtQuick/Controls/Basic"
+    "QtQuick/Controls/Basic/impl"
+    "QtQuick/Controls/Fusion"
+    "QtQuick/Controls/Fusion/impl"
+    "QtQuick/Dialogs"
+    "QtQuick/Layouts"
+    "QtQuick/Templates"
+    "QtQuick/Window"
+    "QtQml"
+    "QtQml/Models"
+    "QtQml/WorkerScript"
+    "QtMultimedia"
+    "Qt/labs/folderlistmodel"
+    "Qt/labs/platform"
+)
+foreach(_mod ${QT_QML_MODULES})
+    if(IS_DIRECTORY "${QT_QML_DIR}/${_mod}")
+        install(DIRECTORY "${QT_QML_DIR}/${_mod}/"
+                DESTINATION ${CMAKE_INSTALL_LIBDIR}/orvocapp/qml/${_mod}
+                FILES_MATCHING PATTERN "*.so" PATTERN "*.qml" PATTERN "qmldir" PATTERN "*.qmltypes")
     endif()
 endforeach()

@@ -81,7 +81,7 @@ Rectangle {
 
     MediaPlayer {
         id: mediaPlayer
-        audioOutput: AudioOutput {}
+        audioOutput: AudioOutput { volume: 1.0 }
         onMediaStatusChanged: {
             if (mediaStatus === MediaPlayer.LoadedMedia && translationView.wantsToPlay) {
                 translationView.wantsToPlay = false;
