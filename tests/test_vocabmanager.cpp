@@ -62,3 +62,46 @@ TEST_CASE("VocabManager add and remove words", "[vocabmanager]") {
         REQUIRE(vm.words().isEmpty());
     }
 }
+
+TEST_CASE("VocabManager filter words", "[vocabmanager]") {
+    QCoreApplication app(argc, argv);
+    app.setApplicationName("orVocab-test");
+
+    VocabManager vm;
+    vm.addWord("algorithm");
+    vm.addWord("allocate");
+    vm.addWord("binary");
+    vm.addWord("cache");
+
+    SECTION("empty filter returns all words") {
+        vm.filterWords("");
+        REQUIRE(vm.filteredWords() == QStringList({"algorithm", "allocate", "binary", "cache"}));
+    }
+
+    SECTION("filter narrows list with case-insensitive contains") {
+        vm.filterWords("al");
+        REQUIRE(vm.filteredWords() == QStringList({"algorithm", "allocate"}));
+    }
+
+    SECTION("filter with no matches returns empty list") {
+        vm.filterWords("xyz");
+        REQUIRE(vm.filteredWords().isEmpty());
+    }
+
+    SECTION("filter is case-insensitive") {
+        vm.filterWords("AL");
+        REQUIRE(vm.filteredWords() == QStringList({"algorithm", "allocate"}));
+    }
+
+    SECTION("filteredWords updates when word is added matching current filter") {
+        vm.filterWords("al");
+        vm.addWord("alpha");
+        REQUIRE(vm.filteredWords() == QStringList({"algorithm", "allocate", "alpha"}));
+    }
+
+    SECTION("filteredWords updates when matching word is removed") {
+        vm.filterWords("al");
+        vm.removeWord("algorithm");
+        REQUIRE(vm.filteredWords() == QStringList({"allocate"}));
+    }
+}
