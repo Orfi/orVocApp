@@ -6,6 +6,8 @@ qt_add_executable(apporVocab
     main.cpp
     vocabmanager.h
     vocabmanager.cpp
+    networkclient.h
+    networkclient.cpp
 )
 
 qt_add_qml_module(apporVocab
