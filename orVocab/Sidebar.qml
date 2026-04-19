@@ -11,6 +11,7 @@ Rectangle {
 
     signal wordSelected(string word)
     signal wordDoubleClicked(string word)
+    signal wordDeleted(string word)
 
     ColumnLayout {
         anchors.fill: parent
@@ -33,12 +34,14 @@ Rectangle {
                 onClicked: {
                     if (searchField.text.trim() === "")
                         return;
-                    var idx = VocabManager.addWord(searchField.text);
+                    var word = searchField.text.trim().toLowerCase();
+                    VocabManager.addWord(searchField.text);
+                    searchField.text = "";
+                    var idx = VocabManager.filteredWords.indexOf(word);
                     if (idx >= 0) {
                         wordList.currentIndex = idx;
-                        wordSelected(VocabManager.filteredWords[idx]);
+                        sidebar.wordDoubleClicked(word);
                     }
-                    searchField.text = "";
                 }
             }
         }
@@ -84,7 +87,11 @@ Rectangle {
 
                 MenuItem {
                     text: "Delete"
-                    onTriggered: VocabManager.removeWord(contextMenu.selectedWord)
+                    onTriggered: {
+                        var word = contextMenu.selectedWord;
+                        VocabManager.removeWord(word);
+                        sidebar.wordDeleted(word);
+                    }
                 }
             }
         }

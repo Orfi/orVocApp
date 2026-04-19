@@ -15,6 +15,7 @@ Rectangle {
     property url audioSource: ""
     property string definitionError: ""
     property string translationError: ""
+    property bool wantsToPlay: false
 
     function lookupWord(word) {
         currentWord = word;
@@ -24,8 +25,26 @@ Rectangle {
         audioSource = "";
         definitionError = "";
         translationError = "";
+        wantsToPlay = false;
+        mediaPlayer.stop();
+        mediaPlayer.source = "";
+        audioErrorLabel.visible = false;
         NetworkClient.fetchDefinition(word);
         NetworkClient.fetchTranslation(word);
+    }
+
+    function clearView() {
+        currentWord = "";
+        phonetic = "";
+        definitionHtml = "";
+        translationHtml = "";
+        audioSource = "";
+        definitionError = "";
+        translationError = "";
+        wantsToPlay = false;
+        mediaPlayer.stop();
+        mediaPlayer.source = "";
+        audioErrorLabel.visible = false;
     }
 
     Connections {
@@ -63,6 +82,22 @@ Rectangle {
     MediaPlayer {
         id: mediaPlayer
         audioOutput: AudioOutput {}
+        onMediaStatusChanged: {
+            if (mediaStatus === MediaPlayer.LoadedMedia && translationView.wantsToPlay) {
+                translationView.wantsToPlay = false;
+                mediaPlayer.play();
+            }
+            if (mediaStatus === MediaPlayer.InvalidMedia) {
+                translationView.wantsToPlay = false;
+                audioErrorLabel.text = "Audio not available for this word.";
+                audioErrorLabel.visible = true;
+            }
+        }
+        onErrorOccurred: function(error, errorString) {
+            translationView.wantsToPlay = false;
+            audioErrorLabel.text = "Audio error: " + errorString;
+            audioErrorLabel.visible = true;
+        }
     }
 
     ColumnLayout {
@@ -93,12 +128,26 @@ Rectangle {
             Item { Layout.fillWidth: true }
 
             Button {
-                text: "Play Pronunciation"
+                text: "\u25B6  Play Pronunciation"
                 enabled: audioSource.toString() !== ""
                 onClicked: {
-                    mediaPlayer.source = audioSource;
-                    mediaPlayer.play();
+                    audioErrorLabel.visible = false;
+                    translationView.wantsToPlay = true;
+                    if (mediaPlayer.source == audioSource) {
+                        mediaPlayer.stop();
+                        mediaPlayer.play();
+                        translationView.wantsToPlay = false;
+                    } else {
+                        mediaPlayer.source = audioSource;
+                    }
                 }
+            }
+
+            Label {
+                id: audioErrorLabel
+                visible: false
+                color: "#e74c3c"
+                font.pixelSize: 12
             }
         }
 

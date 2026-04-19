@@ -33,7 +33,7 @@ DictionaryResult NetworkClient::parseDictionaryResponse(const QByteArray &data)
     QJsonArray phonetics = entry.value("phonetics").toArray();
     for (const QJsonValue &p : phonetics) {
         QString audio = p.toObject().value("audio").toString();
-        if (!audio.isEmpty() && audio.endsWith(".mp3")) {
+        if (!audio.isEmpty() && audio.startsWith("http")) {
             result.audioUrl = QUrl(audio);
             break;
         }

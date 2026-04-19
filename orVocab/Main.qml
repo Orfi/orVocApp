@@ -13,6 +13,18 @@ ApplicationWindow {
 
     property string currentWord: ""
 
+    palette.window: "#0a1628"
+    palette.base: "#101e36"
+    palette.alternateBase: "#162744"
+    palette.text: "#e8e4dd"
+    palette.windowText: "#e8e4dd"
+    palette.button: "#1a3055"
+    palette.buttonText: "#e8e4dd"
+    palette.highlight: "#2d5a9e"
+    palette.highlightedText: "#ffffff"
+    palette.mid: "#1e3a5f"
+    palette.placeholderText: "#7a8ba0"
+
     header: ToolBar {
         RowLayout {
             anchors.fill: parent
@@ -55,6 +67,13 @@ ApplicationWindow {
                 root.currentWord = word;
                 translationView.lookupWord(word);
             }
+
+            onWordDeleted: function(word) {
+                if (root.currentWord === word) {
+                    root.currentWord = "";
+                    translationView.clearView();
+                }
+            }
         }
 
         TranslationView {
@@ -68,6 +87,7 @@ ApplicationWindow {
     FileDialog {
         id: importJsonDialog
         title: "Import JSON Word List"
+        fileMode: FileDialog.OpenFile
         nameFilters: ["JSON files (*.json)"]
         onAccepted: confirmImportDialog.open()
     }
@@ -75,6 +95,7 @@ ApplicationWindow {
     FileDialog {
         id: importTextDialog
         title: "Import Text Word List"
+        fileMode: FileDialog.OpenFile
         nameFilters: ["Text files (*.txt)"]
         onAccepted: VocabManager.importText(importTextDialog.selectedFile)
     }
@@ -83,6 +104,7 @@ ApplicationWindow {
         id: exportJsonDialog
         title: "Export JSON Word List"
         fileMode: FileDialog.SaveFile
+        defaultSuffix: "json"
         nameFilters: ["JSON files (*.json)"]
         onAccepted: VocabManager.exportJson(exportJsonDialog.selectedFile)
     }
@@ -91,6 +113,7 @@ ApplicationWindow {
         id: exportTextDialog
         title: "Export Text Word List"
         fileMode: FileDialog.SaveFile
+        defaultSuffix: "txt"
         nameFilters: ["Text files (*.txt)"]
         onAccepted: VocabManager.exportText(exportTextDialog.selectedFile)
     }
