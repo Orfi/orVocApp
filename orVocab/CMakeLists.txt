@@ -15,6 +15,7 @@ qt_add_qml_module(apporVocab
     QML_FILES
         Main.qml
         Sidebar.qml
+        TranslationView.qml
 )
 
 set_target_properties(apporVocab PROPERTIES
