@@ -14,6 +14,7 @@ qt_add_qml_module(apporVocab
     URI orVocab
     QML_FILES
         Main.qml
+        Sidebar.qml
 )
 
 set_target_properties(apporVocab PROPERTIES
