@@ -130,6 +130,7 @@ Rectangle {
             Button {
                 text: "\u25B6  Pronunciation"
                 enabled: audioSource.toString() !== ""
+                opacity: enabled ? 1.0 : 0.4
                 onClicked: {
                     audioErrorLabel.visible = false;
                     translationView.wantsToPlay = true;
