@@ -1,6 +1,9 @@
 // tests/test_vocabmanager.cpp
 #include <catch2/catch_all.hpp>
 #include <QCoreApplication>
+#include <QDir>
+#include <QFile>
+#include <QStandardPaths>
 #include "vocabmanager.h"
 
 static int argc = 1;
@@ -104,4 +107,87 @@ TEST_CASE("VocabManager filter words", "[vocabmanager]") {
         vm.removeWord("algorithm");
         REQUIRE(vm.filteredWords() == QStringList({"allocate"}));
     }
+}
+
+TEST_CASE("VocabManager JSON persistence", "[vocabmanager][json]") {
+    QCoreApplication app(argc, argv);
+    app.setApplicationName("orVocab-test");
+
+    // Use test-specific data location to avoid polluting real data
+    QStandardPaths::setTestModeEnabled(true);
+
+    // Clean up any leftover test data
+    QString dataDir = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+    QDir(dataDir).removeRecursively();
+
+    SECTION("loadFromJson with missing file starts empty") {
+        VocabManager vm;
+        vm.loadFromJson();
+        REQUIRE(vm.words().isEmpty());
+    }
+
+    SECTION("saveToJson then loadFromJson round-trips correctly") {
+        {
+            VocabManager vm;
+            vm.addWord("cherry");
+            vm.addWord("apple");
+            vm.addWord("banana");
+            vm.saveToJson();
+        }
+        {
+            VocabManager vm;
+            vm.loadFromJson();
+            REQUIRE(vm.words() == QStringList({"apple", "banana", "cherry"}));
+        }
+    }
+
+    SECTION("loadFromJson with corrupt JSON starts empty") {
+        QString dataDir = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+        QDir().mkpath(dataDir);
+        QFile file(dataDir + "/vocab.json");
+        file.open(QIODevice::WriteOnly);
+        file.write("not valid json {{{");
+        file.close();
+
+        VocabManager vm;
+        vm.loadFromJson();
+        REQUIRE(vm.words().isEmpty());
+    }
+
+    SECTION("addWord auto-saves to JSON") {
+        {
+            VocabManager vm;
+            vm.loadFromJson();
+            vm.addWord("apple");
+            vm.addWord("banana");
+        }
+        {
+            VocabManager vm;
+            vm.loadFromJson();
+            REQUIRE(vm.words() == QStringList({"apple", "banana"}));
+        }
+    }
+
+    SECTION("removeWord auto-saves to JSON") {
+        {
+            VocabManager vm;
+            vm.loadFromJson();
+            vm.addWord("apple");
+            vm.addWord("banana");
+        }
+        {
+            VocabManager vm;
+            vm.loadFromJson();
+            vm.removeWord("apple");
+        }
+        {
+            VocabManager vm;
+            vm.loadFromJson();
+            REQUIRE(vm.words() == QStringList({"banana"}));
+        }
+    }
+
+    // Clean up
+    QDir(dataDir).removeRecursively();
+    QStandardPaths::setTestModeEnabled(false);
 }
