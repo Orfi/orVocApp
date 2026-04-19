@@ -128,10 +128,92 @@ void VocabManager::saveToJson()
     file.close();
 }
 
-void VocabManager::exportJson(const QUrl &) {}
-void VocabManager::exportText(const QUrl &) {}
-void VocabManager::importJson(const QUrl &) {}
-void VocabManager::importText(const QUrl &) {}
+void VocabManager::exportJson(const QUrl &path)
+{
+    QFile file(path.toLocalFile());
+    if (!file.open(QIODevice::WriteOnly)) {
+        qWarning("VocabManager: cannot write to %s", qPrintable(path.toLocalFile()));
+        return;
+    }
+
+    QJsonArray arr;
+    for (const QString &w : m_words)
+        arr.append(w);
+
+    QJsonObject obj;
+    obj["words"] = arr;
+    file.write(QJsonDocument(obj).toJson());
+    file.close();
+}
+
+void VocabManager::exportText(const QUrl &path)
+{
+    QFile file(path.toLocalFile());
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+        qWarning("VocabManager: cannot write to %s", qPrintable(path.toLocalFile()));
+        return;
+    }
+
+    for (const QString &w : m_words) {
+        file.write(w.toUtf8());
+        file.write("\n");
+    }
+    file.close();
+}
+
+void VocabManager::importJson(const QUrl &path)
+{
+    QFile file(path.toLocalFile());
+    if (!file.open(QIODevice::ReadOnly)) {
+        qWarning("VocabManager: cannot read %s", qPrintable(path.toLocalFile()));
+        return;
+    }
+
+    QJsonParseError parseError;
+    QJsonDocument doc = QJsonDocument::fromJson(file.readAll(), &parseError);
+    file.close();
+
+    if (parseError.error != QJsonParseError::NoError) {
+        qWarning("VocabManager: corrupt JSON in import file: %s",
+                 qPrintable(parseError.errorString()));
+        return;
+    }
+
+    QJsonArray arr = doc.object().value("words").toArray();
+    QStringList newWords;
+    for (const QJsonValue &v : arr)
+        newWords.append(v.toString().trimmed().toLower());
+
+    newWords.sort();
+    m_words = newWords;
+    saveToJson();
+    updateFilteredWords();
+    emit wordsChanged();
+}
+
+void VocabManager::importText(const QUrl &path)
+{
+    QFile file(path.toLocalFile());
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        qWarning("VocabManager: cannot read %s", qPrintable(path.toLocalFile()));
+        return;
+    }
+
+    while (!file.atEnd()) {
+        QString line = QString::fromUtf8(file.readLine()).trimmed().toLower();
+        if (line.isEmpty())
+            continue;
+
+        auto it = std::lower_bound(m_words.begin(), m_words.end(), line);
+        if (it == m_words.end() || *it != line)
+            m_words.insert(it, line);
+    }
+    file.close();
+
+    saveToJson();
+    updateFilteredWords();
+    emit wordsChanged();
+}
 
 QString VocabManager::dataFilePath() const
 {

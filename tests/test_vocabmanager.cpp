@@ -3,7 +3,11 @@
 #include <QCoreApplication>
 #include <QDir>
 #include <QFile>
+#include <QJsonArray>
+#include <QJsonDocument>
+#include <QJsonObject>
 #include <QStandardPaths>
+#include <QTemporaryDir>
 #include "vocabmanager.h"
 
 static int argc = 1;
@@ -188,6 +192,109 @@ TEST_CASE("VocabManager JSON persistence", "[vocabmanager][json]") {
     }
 
     // Clean up
+    QDir(dataDir).removeRecursively();
+    QStandardPaths::setTestModeEnabled(false);
+}
+
+TEST_CASE("VocabManager export and import", "[vocabmanager][io]") {
+    QCoreApplication app(argc, argv);
+    app.setApplicationName("orVocab-test");
+
+    QStandardPaths::setTestModeEnabled(true);
+    QString dataDir = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+    QDir(dataDir).removeRecursively();
+
+    QTemporaryDir tmpDir;
+    REQUIRE(tmpDir.isValid());
+
+    SECTION("exportJson writes correct JSON to target path") {
+        VocabManager vm;
+        vm.addWord("banana");
+        vm.addWord("apple");
+
+        QString exportPath = tmpDir.path() + "/exported.json";
+        vm.exportJson(QUrl::fromLocalFile(exportPath));
+
+        QFile file(exportPath);
+        REQUIRE(file.open(QIODevice::ReadOnly));
+        QJsonDocument doc = QJsonDocument::fromJson(file.readAll());
+        QJsonArray arr = doc.object().value("words").toArray();
+        REQUIRE(arr.size() == 2);
+        REQUIRE(arr[0].toString() == "apple");
+        REQUIRE(arr[1].toString() == "banana");
+    }
+
+    SECTION("exportText writes one word per line") {
+        VocabManager vm;
+        vm.addWord("cherry");
+        vm.addWord("apple");
+
+        QString exportPath = tmpDir.path() + "/exported.txt";
+        vm.exportText(QUrl::fromLocalFile(exportPath));
+
+        QFile file(exportPath);
+        REQUIRE(file.open(QIODevice::ReadOnly));
+        QString content = QString::fromUtf8(file.readAll());
+        REQUIRE(content == "apple\ncherry\n");
+    }
+
+    SECTION("importJson replaces entire word bank") {
+        VocabManager vm;
+        vm.addWord("old_word");
+
+        // Write a JSON file to import
+        QString importPath = tmpDir.path() + "/import.json";
+        QFile file(importPath);
+        file.open(QIODevice::WriteOnly);
+        file.write(R"({"words": ["delta", "alpha", "gamma"]})");
+        file.close();
+
+        vm.importJson(QUrl::fromLocalFile(importPath));
+        REQUIRE(vm.words() == QStringList({"alpha", "delta", "gamma"}));
+    }
+
+    SECTION("importJson with corrupt file leaves existing list untouched") {
+        VocabManager vm;
+        vm.addWord("apple");
+
+        QString importPath = tmpDir.path() + "/bad.json";
+        QFile file(importPath);
+        file.open(QIODevice::WriteOnly);
+        file.write("not json {{{");
+        file.close();
+
+        vm.importJson(QUrl::fromLocalFile(importPath));
+        REQUIRE(vm.words() == QStringList({"apple"}));
+    }
+
+    SECTION("importText merges without duplicates") {
+        VocabManager vm;
+        vm.addWord("apple");
+        vm.addWord("cherry");
+
+        QString importPath = tmpDir.path() + "/import.txt";
+        QFile file(importPath);
+        file.open(QIODevice::WriteOnly);
+        file.write("banana\napple\ndate\n");
+        file.close();
+
+        vm.importText(QUrl::fromLocalFile(importPath));
+        REQUIRE(vm.words() == QStringList({"apple", "banana", "cherry", "date"}));
+    }
+
+    SECTION("importText handles blank lines and whitespace") {
+        VocabManager vm;
+
+        QString importPath = tmpDir.path() + "/messy.txt";
+        QFile file(importPath);
+        file.open(QIODevice::WriteOnly);
+        file.write("  apple  \n\n  banana \n   \ncherry\n");
+        file.close();
+
+        vm.importText(QUrl::fromLocalFile(importPath));
+        REQUIRE(vm.words() == QStringList({"apple", "banana", "cherry"}));
+    }
+
     QDir(dataDir).removeRecursively();
     QStandardPaths::setTestModeEnabled(false);
 }
