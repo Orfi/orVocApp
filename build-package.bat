@@ -24,7 +24,7 @@ if %errorlevel% neq 0 (
 cd ..
 
 echo === Running windeployqt ===
-"%QT_PREFIX_PATH%\bin\windeployqt.exe" --release --no-translations --no-opengl-sw --no-system-d3d-compiler build\orVocab\Release\orVocApp.exe
+"%QT_PREFIX_PATH%\bin\windeployqt.exe" --release --no-translations --no-opengl-sw --no-system-d3d-compiler --qmldir orVocab build\orVocab\Release\orVocApp.exe
 if %errorlevel% neq 0 exit /b %errorlevel%
 
 echo === Generating installer ===
