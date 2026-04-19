@@ -27,9 +27,11 @@ Rectangle {
                 Layout.fillWidth: true
                 placeholderText: "Search or add word..."
                 onTextChanged: VocabManager.filterWords(text)
+                onAccepted: addButton.clicked()
             }
 
             Button {
+                id: addButton
                 text: "Add"
                 onClicked: {
                     if (searchField.text.trim() === "")
