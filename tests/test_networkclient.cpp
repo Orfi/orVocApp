@@ -78,3 +78,27 @@ TEST_CASE("NetworkClient dictionary parsing", "[networkclient][dictionary]") {
         REQUIRE(result.error == true);
     }
 }
+
+TEST_CASE("NetworkClient translation parsing", "[networkclient][translation]") {
+    QCoreApplication app(argc, argv);
+
+    // Sample GTX translation API response for "hello" → Arabic
+    QByteArray translationResponse = R"([[["مرحبا","hello",null,null,10]],null,"en"])";
+
+    SECTION("parseTranslationResponse extracts Arabic text with RTL HTML") {
+        auto result = NetworkClient::parseTranslationResponse(translationResponse);
+        REQUIRE_FALSE(result.html.isEmpty());
+        REQUIRE(result.html.contains("مرحبا"));
+        REQUIRE(result.html.contains("dir=\"rtl\""));
+    }
+
+    SECTION("parseTranslationResponse with empty data returns error") {
+        auto result = NetworkClient::parseTranslationResponse("[]");
+        REQUIRE(result.error == true);
+    }
+
+    SECTION("parseTranslationResponse with invalid JSON returns error") {
+        auto result = NetworkClient::parseTranslationResponse("not json");
+        REQUIRE(result.error == true);
+    }
+}

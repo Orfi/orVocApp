@@ -6,6 +6,7 @@
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
 #include <QNetworkRequest>
+#include <QUrlQuery>
 
 NetworkClient::NetworkClient(QObject *parent)
     : QObject(parent)
@@ -104,9 +105,66 @@ void NetworkClient::fetchDefinition(const QString &word)
     });
 }
 
-void NetworkClient::fetchTranslation(const QString &) {}
-
-TranslationResult NetworkClient::parseTranslationResponse(const QByteArray &)
+void NetworkClient::fetchTranslation(const QString &word)
 {
-    return TranslationResult{};
+    QUrl url("https://translate.googleapis.com/translate_a/single");
+    QUrlQuery query;
+    query.addQueryItem("client", "gtx");
+    query.addQueryItem("sl", "en");
+    query.addQueryItem("tl", "ar");
+    query.addQueryItem("dt", "t");
+    query.addQueryItem("q", word);
+    url.setQuery(query);
+
+    QNetworkReply *reply = m_nam->get(QNetworkRequest(url));
+
+    connect(reply, &QNetworkReply::finished, this, [this, reply]() {
+        reply->deleteLater();
+
+        if (reply->error() != QNetworkReply::NoError) {
+            emit requestFailed("translation", "Could not fetch translation.");
+            return;
+        }
+
+        auto result = parseTranslationResponse(reply->readAll());
+        if (result.error) {
+            emit requestFailed("translation", "Could not fetch translation.");
+            return;
+        }
+
+        emit translationReady(result.html);
+    });
+}
+
+TranslationResult NetworkClient::parseTranslationResponse(const QByteArray &data)
+{
+    TranslationResult result;
+
+    QJsonDocument doc = QJsonDocument::fromJson(data);
+    if (!doc.isArray()) {
+        result.error = true;
+        return result;
+    }
+
+    // GTX response structure: [[["translated","original",...],...],...,"source_lang"]
+    QJsonArray root = doc.array();
+    if (root.isEmpty() || !root[0].isArray()) {
+        result.error = true;
+        return result;
+    }
+
+    QJsonArray translations = root[0].toArray();
+    if (translations.isEmpty() || !translations[0].isArray()) {
+        result.error = true;
+        return result;
+    }
+
+    QString translated = translations[0].toArray()[0].toString();
+    if (translated.isEmpty()) {
+        result.error = true;
+        return result;
+    }
+
+    result.html = "<p dir=\"rtl\" style=\"font-size: 20px;\">" + translated + "</p>";
+    return result;
 }
