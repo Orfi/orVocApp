@@ -10,17 +10,32 @@
 
 VocabManager::VocabManager(QObject *parent)
     : QObject(parent)
+    , m_sourceModel(new QStringListModel(this))
+    , m_proxyModel(new QSortFilterProxyModel(this))
 {
+    m_proxyModel->setSourceModel(m_sourceModel);
+    m_proxyModel->setFilterCaseSensitivity(Qt::CaseInsensitive);
+    m_proxyModel->setSortCaseSensitivity(Qt::CaseInsensitive);
 }
 
 QStringList VocabManager::words() const
 {
-    return m_words;
+    return m_sourceModel->stringList();
+}
+
+QSortFilterProxyModel* VocabManager::wordModel() const
+{
+    return m_proxyModel;
 }
 
 QStringList VocabManager::filteredWords() const
 {
-    return m_filteredWords;
+    QStringList result;
+    for (int i = 0; i < m_proxyModel->rowCount(); ++i) {
+        QModelIndex idx = m_proxyModel->index(i, 0);
+        result.append(idx.data(Qt::DisplayRole).toString());
+    }
+    return result;
 }
 
 int VocabManager::addWord(const QString &word)
@@ -29,15 +44,16 @@ int VocabManager::addWord(const QString &word)
     if (normalized.isEmpty())
         return -1;
 
-    auto it = std::lower_bound(m_words.begin(), m_words.end(), normalized);
-    int idx = static_cast<int>(it - m_words.begin());
+    QStringList current = m_sourceModel->stringList();
+    auto it = std::lower_bound(current.begin(), current.end(), normalized);
+    int idx = static_cast<int>(it - current.begin());
 
-    if (it != m_words.end() && *it == normalized)
+    if (it != current.end() && *it == normalized)
         return idx;
 
-    m_words.insert(idx, normalized);
+    m_sourceModel->insertRow(idx);
+    m_sourceModel->setData(m_sourceModel->index(idx, 0), normalized);
     saveToJson();
-    updateFilteredWords();
     emit wordsChanged();
     return idx;
 }
@@ -45,34 +61,29 @@ int VocabManager::addWord(const QString &word)
 void VocabManager::removeWord(const QString &word)
 {
     QString normalized = word.trimmed().toLower();
-    if (m_words.removeOne(normalized)) {
+    QStringList current = m_sourceModel->stringList();
+    int idx = current.indexOf(normalized);
+    if (idx >= 0) {
+        m_sourceModel->removeRow(idx);
         saveToJson();
-        updateFilteredWords();
         emit wordsChanged();
     }
 }
 
 void VocabManager::filterWords(const QString &query)
 {
-    m_currentFilter = query;
-    updateFilteredWords();
+    m_proxyModel->setFilterFixedString(query);
 }
 
-void VocabManager::updateFilteredWords()
+int VocabManager::indexOfWord(const QString &word) const
 {
-    QStringList filtered;
-    if (m_currentFilter.isEmpty()) {
-        filtered = m_words;
-    } else {
-        for (const QString &w : m_words) {
-            if (w.contains(m_currentFilter, Qt::CaseInsensitive))
-                filtered.append(w);
-        }
+    QString normalized = word.trimmed().toLower();
+    for (int i = 0; i < m_proxyModel->rowCount(); ++i) {
+        QModelIndex idx = m_proxyModel->index(i, 0);
+        if (idx.data(Qt::DisplayRole).toString() == normalized)
+            return i;
     }
-    if (filtered != m_filteredWords) {
-        m_filteredWords = filtered;
-        emit filteredWordsChanged();
-    }
+    return -1;
 }
 
 void VocabManager::loadFromJson()
@@ -98,11 +109,11 @@ void VocabManager::loadFromJson()
     }
 
     QJsonArray arr = doc.object().value("words").toArray();
-    m_words.clear();
+    QStringList words;
     for (const QJsonValue &v : arr)
-        m_words.append(v.toString());
+        words.append(v.toString());
 
-    updateFilteredWords();
+    m_sourceModel->setStringList(words);
     emit wordsChanged();
 }
 
@@ -118,7 +129,7 @@ void VocabManager::saveToJson()
     }
 
     QJsonArray arr;
-    for (const QString &w : m_words)
+    for (const QString &w : m_sourceModel->stringList())
         arr.append(w);
 
     QJsonObject obj;
@@ -137,7 +148,7 @@ void VocabManager::exportJson(const QUrl &path)
     }
 
     QJsonArray arr;
-    for (const QString &w : m_words)
+    for (const QString &w : m_sourceModel->stringList())
         arr.append(w);
 
     QJsonObject obj;
@@ -154,7 +165,7 @@ void VocabManager::exportText(const QUrl &path)
         return;
     }
 
-    for (const QString &w : m_words) {
+    for (const QString &w : m_sourceModel->stringList()) {
         file.write(w.toUtf8());
         file.write("\n");
     }
@@ -185,9 +196,8 @@ void VocabManager::importJson(const QUrl &path)
         newWords.append(v.toString().trimmed().toLower());
 
     newWords.sort();
-    m_words = newWords;
+    m_sourceModel->setStringList(newWords);
     saveToJson();
-    updateFilteredWords();
     emit wordsChanged();
 }
 
@@ -199,19 +209,20 @@ void VocabManager::importText(const QUrl &path)
         return;
     }
 
+    QStringList current = m_sourceModel->stringList();
     while (!file.atEnd()) {
         QString line = QString::fromUtf8(file.readLine()).trimmed().toLower();
         if (line.isEmpty())
             continue;
 
-        auto it = std::lower_bound(m_words.begin(), m_words.end(), line);
-        if (it == m_words.end() || *it != line)
-            m_words.insert(it, line);
+        auto it = std::lower_bound(current.begin(), current.end(), line);
+        if (it == current.end() || *it != line)
+            current.insert(it, line);
     }
     file.close();
 
+    m_sourceModel->setStringList(current);
     saveToJson();
-    updateFilteredWords();
     emit wordsChanged();
 }
 

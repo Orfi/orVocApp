@@ -1,10 +1,10 @@
 // orVocab/main.cpp
 #include <QApplication>
+#include <QElapsedTimer>
 #include <QIcon>
+#include <QPixmap>
 #include <QQmlApplicationEngine>
-#include <QQmlComponent>
-#include <QQuickWindow>
-#include <QTimer>
+#include <QSplashScreen>
 #include "vocabmanager.h"
 #include "networkclient.h"
 
@@ -29,6 +29,18 @@ int main(int argc, char *argv[])
 
     NetworkClient networkClient;
 
+    QPixmap splashPix(":/qt/qml/orVocab/splash.png");
+    splashPix = splashPix.scaled(splashPix.size() * 0.2, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+    QSplashScreen splash(splashPix);
+    splash.setWindowOpacity(0.6);
+    splash.show();
+
+    QElapsedTimer timer;
+    timer.start();
+    while (timer.elapsed() < 3000) {
+        app.processEvents();
+    }
+
     QQmlApplicationEngine engine;
 
     qmlRegisterSingletonInstance("orVocab", 1, 0, "VocabManager", &vocabManager);
@@ -41,18 +53,8 @@ int main(int argc, char *argv[])
         []() { QCoreApplication::exit(-1); },
         Qt::QueuedConnection);
 
-    QQmlComponent splashComponent(&engine, QUrl("qrc:/qt/qml/orVocab/SplashScreen.qml"));
-    QObject *splashObj = splashComponent.create();
-
-    QTimer::singleShot(3000, &app, [&engine, splashObj]() {
-        if (splashObj) {
-            auto *splashWindow = qobject_cast<QQuickWindow *>(splashObj);
-            if (splashWindow)
-                splashWindow->close();
-            splashObj->deleteLater();
-        }
-        engine.loadFromModule("orVocab", "Main");
-    });
+    engine.loadFromModule("orVocab", "Main");
+    splash.close();
 
     return app.exec();
 }
