@@ -39,7 +39,7 @@ Rectangle {
                     var word = searchField.text.trim().toLowerCase();
                     VocabManager.addWord(searchField.text);
                     searchField.text = "";
-                    var idx = VocabManager.filteredWords.indexOf(word);
+                    var idx = VocabManager.indexOfWord(word);
                     if (idx >= 0) {
                         wordList.currentIndex = idx;
                         sidebar.wordDoubleClicked(word);
@@ -58,18 +58,18 @@ Rectangle {
             id: wordList
             Layout.fillWidth: true
             Layout.fillHeight: true
-            model: VocabManager.filteredWords
+            model: VocabManager.wordModel
             clip: true
             currentIndex: -1
 
             delegate: ItemDelegate {
                 width: wordList.width
-                text: modelData
+                text: model.display
                 highlighted: wordList.currentIndex === index
 
                 onDoubleClicked: {
                     wordList.currentIndex = index;
-                    sidebar.wordDoubleClicked(modelData);
+                    sidebar.wordDoubleClicked(model.display);
                 }
 
                 MouseArea {
@@ -77,7 +77,7 @@ Rectangle {
                     acceptedButtons: Qt.RightButton
                     onClicked: function(mouse) {
                         wordList.currentIndex = index;
-                        contextMenu.selectedWord = modelData;
+                        contextMenu.selectedWord = model.display;
                         contextMenu.popup();
                     }
                 }
