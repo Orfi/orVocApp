@@ -16,7 +16,6 @@ qt_add_qml_module(orVocApp
         Main.qml
         Sidebar.qml
         TranslationView.qml
-        SplashScreen.qml
     RESOURCES
         splash.png
         icon.png
