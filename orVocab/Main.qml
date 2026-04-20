@@ -63,7 +63,7 @@ ApplicationWindow {
             SplitView.preferredWidth: 220
             SplitView.minimumWidth: 150
 
-            onWordDoubleClicked: function(word) {
+            onWordClicked: function(word) {
                 root.currentWord = word;
                 translationView.lookupWord(word);
             }

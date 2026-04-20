@@ -10,7 +10,7 @@ Rectangle {
     border.width: 0
 
     signal wordSelected(string word)
-    signal wordDoubleClicked(string word)
+    signal wordClicked(string word)
     signal wordDeleted(string word)
 
     ColumnLayout {
@@ -42,7 +42,7 @@ Rectangle {
                     var idx = VocabManager.indexOfWord(word);
                     if (idx >= 0) {
                         wordList.currentIndex = idx;
-                        sidebar.wordDoubleClicked(word);
+                        sidebar.wordClicked(word);
                     }
                 }
             }
@@ -67,9 +67,9 @@ Rectangle {
                 text: model.display
                 highlighted: wordList.currentIndex === index
 
-                onDoubleClicked: {
+                onClicked: {
                     wordList.currentIndex = index;
-                    sidebar.wordDoubleClicked(model.display);
+                    sidebar.wordClicked(model.display);
                 }
 
                 MouseArea {
