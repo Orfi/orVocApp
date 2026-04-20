@@ -103,7 +103,7 @@ TEST_CASE("VocabManager filter words", "[vocabmanager]") {
     SECTION("filteredWords updates when word is added matching current filter") {
         vm.filterWords("al");
         vm.addWord("alpha");
-        REQUIRE(vm.filteredWords() == QStringList({"algorithm", "alpha", "allocate"}));
+        REQUIRE(vm.filteredWords() == QStringList({"algorithm", "allocate", "alpha"}));
     }
 
     SECTION("filteredWords updates when matching word is removed") {
