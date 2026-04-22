@@ -11,6 +11,9 @@ Run the app:
 Generate .deb only (if already built):
 cd build && cpack -G DEB && cd ..
 
+Generate .deb only (if already built, e.g. after building in Qt Creator):
+./generate-deb.sh
+
 Install:
 sudo dpkg -i ./build/orvocapp-0.1-Linux.deb
 

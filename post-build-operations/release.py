@@ -47,7 +47,8 @@ def main():
 
     notes = input("Enter release notes (or press Enter for default): ").strip()
     if not notes:
-        notes = f"orVocApp {version}"
+        exe_name = installer_name.split("-")[0]
+        notes = f"{exe_name} {version}"
 
     if version in existing:
         print(f"Release {version} already exists. Replacing...")
