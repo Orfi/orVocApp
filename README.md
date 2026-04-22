@@ -1,4 +1,9 @@
-# orVocApp
+<p align="center">
+  <img src="design/icons-des.png" alt="orVocApp Logo" width="128" height="128">
+</p>
+
+<h1 align="center">orVocApp</h1>
+
 
 A lightweight Qt 6 / QML desktop vocabulary builder for personal word bank management with English definitions, Arabic translations, and audio pronunciations.
 
