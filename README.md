@@ -1,16 +1,17 @@
 <p align="center">
-  <img src="design/icons-des.png" alt="orVocApp Logo" width="128" height="128">
+  <img src="orVocab/icon_128.png" alt="orVocApp Logo" width="128" height="128">
 </p>
 
 <h1 align="center">orVocApp</h1>
 
-
+<p align="center">
 A lightweight Qt 6 / QML desktop vocabulary builder for personal word bank management with English definitions, Arabic translations, and audio pronunciations.
 
 ![Qt](https://img.shields.io/badge/Qt-6.10-41CD52?logo=qt&logoColor=white)
 ![C++](https://img.shields.io/badge/C++-17-00599C?logo=cplusplus&logoColor=white)
 ![License](https://img.shields.io/badge/License-Private-lightgrey)
 ![Platform](https://img.shields.io/badge/Platform-Linux%20%7C%20Windows-blue)
+</p>
 
 ---
 
