@@ -1,0 +1,28 @@
+Build:
+cmake -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="$HOME/Qt/6.10.2/gcc_64"
+cmake --build build
+
+Or use the build-package script which configures, builds, tests, and generates the .deb:
+./build-package.sh
+
+Run the app:
+./build/orVocab/orVocApp
+
+Generate .deb only (if already built):
+cd build && cpack -G DEB && cd ..
+
+Install:
+sudo dpkg -i ./build/orvocapp-0.1-Linux.deb
+
+Run (after install):
+orvocapp
+
+Publish to GitHub:
+python3 post-build-operations/release.py
+
+Uninstall:
+sudo dpkg -r orvocapp
+
+Note:
+If old icons still appear after using new icons, run:
+sudo rm ~/.local/share/icons/hicolor/*/apps/orvocapp.png

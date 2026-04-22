@@ -3,10 +3,11 @@ import subprocess
 import sys
 import os
 
-DEB_PATH = "build/orvocapp-0.1-Linux.deb"
+REPO_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+BUILD_DIR = os.path.join(REPO_DIR, "build")
 
 def run(cmd, check=True):
-    result = subprocess.run(cmd, capture_output=True, text=True)
+    result = subprocess.run(cmd, capture_output=True, text=True, cwd=REPO_DIR)
     if check and result.returncode != 0:
         print(f"Error: {result.stderr.strip()}")
         sys.exit(1)
@@ -17,8 +18,20 @@ def get_existing_releases():
     return result.stdout.strip().splitlines()
 
 def main():
-    if not os.path.isfile(DEB_PATH):
-        print(f"Error: {DEB_PATH} not found. Run build-package.sh first.")
+    installers = [f for f in os.listdir(BUILD_DIR) if f.endswith((".deb", ".exe"))] if os.path.isdir(BUILD_DIR) else []
+    if installers:
+        print("Available installer files:")
+        for f in installers:
+            print(f"  - {f}")
+
+    installer_name = input("Enter installer filename (.deb or .exe): ").strip()
+    if not installer_name:
+        print("No filename entered. Aborting.")
+        sys.exit(1)
+
+    installer_path = os.path.join(BUILD_DIR, installer_name)
+    if not os.path.isfile(installer_path):
+        print(f"Error: {installer_path} not found. Run build-package.sh first.")
         sys.exit(1)
 
     existing = get_existing_releases()
@@ -41,7 +54,7 @@ def main():
         run(["gh", "release", "delete", version, "--yes", "--cleanup-tag"])
 
     print(f"Creating release {version}...")
-    run(["gh", "release", "create", version, DEB_PATH, "--title", version, "--notes", notes])
+    run(["gh", "release", "create", version, installer_path, "--title", version, "--notes", notes])
     print(f"Release {version} published successfully.")
 
 if __name__ == "__main__":
