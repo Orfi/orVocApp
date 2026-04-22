@@ -42,6 +42,7 @@ Rectangle {
                     var idx = VocabManager.indexOfWord(word);
                     if (idx >= 0) {
                         wordList.currentIndex = idx;
+                        wordList.positionViewAtIndex(idx, ListView.Contain);
                         sidebar.wordClicked(word);
                     }
                 }
