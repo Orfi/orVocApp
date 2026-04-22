@@ -31,9 +31,14 @@ A lightweight Qt 6 / QML desktop vocabulary builder for personal word bank manag
 
 The interface uses a two-column layout: words list on the left, search, translation and pronunciation on the right.
 
-
 <p align="center">
   <img src="design/wireframe.png" alt="Home screen wireframe" width="700">
+</p>
+
+## Screenshot
+
+<p align="center">
+  <img src="design/gui.png" alt="Home screen wireframe" width="700">
 </p>
 
 ## Building
