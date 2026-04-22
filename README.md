@@ -36,22 +36,6 @@ The interface uses a two-column layout: words list on the left, search, translat
   <img src="design/wireframe.png" alt="Home screen wireframe" width="700">
 </p>
 
-```
-+------------------------------------------------------------------+
-| orVocApp         [Import JSON][Import Text][Export JSON][Export Text] |
-+------------+-----------------------------------------------------+
-| algorithm  |  algorithm              [> Play Pronunciation]       |
-| binary     |  /algo-ri-thm/                                      |
-| cache      |  +-- English Definition --------------------------+ |
-|            |  | noun                                            | |
-|            |  | A process or set of rules to be followed...     | |
-|            |  +------------------------------------------------+ |
-|            |  +-- Arabic Translation --------------------------+ |
-|            |  |                                      خوارزمية   | |
-|            |  +------------------------------------------------+ |
-+------------+-----------------------------------------------------+
-```
-
 ## Building
 
 ### Requirements
