@@ -61,6 +61,7 @@ ApplicationWindow {
             Button {
                 text: "Export PDF"
                 enabled: !exportOverlay.exporting
+                opacity: enabled ? 1.0 : 0.4
                 onClicked: pageSizeDialog.open()
             }
         }
