@@ -38,31 +38,20 @@ ApplicationWindow {
                 Layout.fillWidth: true
             }
 
-            Button {
-                text: "Import JSON"
-                onClicked: importJsonDialog.open()
-            }
-            Button {
-                text: "Import Text"
-                onClicked: importTextDialog.open()
-            }
-            Button {
-                text: "Export JSON"
-                onClicked: exportJsonDialog.open()
-            }
-            Button {
-                text: "Export Text"
-                onClicked: exportTextDialog.open()
-            }
             ExportOverlay {
                 id: exportOverlay
             }
 
             Button {
-                text: "Export PDF"
-                enabled: !exportOverlay.exporting
-                opacity: enabled ? 1.0 : 0.4
-                onClicked: pageSizeDialog.open()
+                id: exportButton
+                text: "Export"
+                onClicked: exportPopup.open()
+            }
+
+            Button {
+                id: importButton
+                text: "Import"
+                onClicked: importPopup.open()
             }
         }
     }
@@ -144,32 +133,36 @@ ApplicationWindow {
         onAccepted: VocabManager.importJson(importJsonDialog.file)
     }
 
-    Dialog {
-        id: pageSizeDialog
-        title: "Select Page Size"
-        modal: true
-        anchors.centerIn: parent
-        standardButtons: Dialog.Cancel
+    ExportPopup {
+        id: exportPopup
+        parent: exportButton
+        x: exportButton.width - width
+        y: exportButton.height
+        exporting: exportOverlay.exporting
 
-        RowLayout {
-            spacing: 12
-
-            Button {
-                text: "A4"
-                onClicked: {
-                    pageSizeDialog.close();
-                    root.selectedPageSize = 0;
-                    exportPdfDialog.open();
-                }
+        onExportRequested: function(format, pageSize) {
+            if (format === "json") {
+                exportJsonDialog.open();
+            } else if (format === "text") {
+                exportTextDialog.open();
+            } else if (format === "pdf") {
+                root.selectedPageSize = pageSize;
+                exportPdfDialog.open();
             }
+        }
+    }
 
-            Button {
-                text: "Letter"
-                onClicked: {
-                    pageSizeDialog.close();
-                    root.selectedPageSize = 1;
-                    exportPdfDialog.open();
-                }
+    ImportPopup {
+        id: importPopup
+        parent: importButton
+        x: importButton.width - width
+        y: importButton.height
+
+        onImportRequested: function(format) {
+            if (format === "json") {
+                importJsonDialog.open();
+            } else if (format === "text") {
+                importTextDialog.open();
             }
         }
     }
