@@ -34,10 +34,8 @@ signals:
 protected:
     virtual bool renderToFile(const QVector<WordEntry> &entries, const QString &outputPath) = 0;
 
-private slots:
-    void doWork();
-
 private:
+    void doWork();
     void fetchWord(const QString &word, WordEntry &entry);
 
     QStringList m_words;

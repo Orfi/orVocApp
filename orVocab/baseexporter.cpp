@@ -26,9 +26,7 @@ BaseExporter::~BaseExporter()
 void BaseExporter::exportToFile(const QString &outputPath)
 {
     m_outputPath = outputPath;
-    m_thread = new QThread;
-    moveToThread(m_thread);
-    connect(m_thread, &QThread::started, this, &BaseExporter::doWork);
+    m_thread = QThread::create([this]() { doWork(); });
     connect(m_thread, &QThread::finished, m_thread, &QThread::deleteLater);
     m_thread->start();
 }

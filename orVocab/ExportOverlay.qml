@@ -2,13 +2,19 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 
-Item {
+Rectangle {
     id: overlay
     anchors.right: parent.right
     anchors.bottom: parent.bottom
     anchors.margins: 16
     width: 280
     height: progressColumn.implicitHeight + 16
+    z: 100
+    color: palette.base
+    radius: 6
+    border.color: palette.mid
+    border.width: 1
+    visible: exporting || progressColumn.opacity > 0 || notificationLabel.opacity > 0
 
     property int current: 0
     property int total: 0
