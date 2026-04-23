@@ -7,6 +7,7 @@
 #include <QVector>
 
 class QNetworkAccessManager;
+class QNetworkReply;
 class QThread;
 
 struct WordEntry {
@@ -35,13 +36,16 @@ protected:
     virtual bool renderToFile(const QVector<WordEntry> &entries, const QString &outputPath) = 0;
 
 private:
-    void doWork();
-    void fetchWord(const QString &word, WordEntry &entry);
+    void fetchNextWord();
+    void onDefinitionReply(int index, QNetworkReply *reply);
+    void onTranslationReply(int index, QNetworkReply *reply);
+    void startRender();
 
     QStringList m_words;
     QString m_outputPath;
-    QThread *m_thread = nullptr;
     QNetworkAccessManager *m_nam = nullptr;
+    QVector<WordEntry> m_entries;
+    int m_currentIndex = 0;
 };
 
 #endif // BASEEXPORTER_H

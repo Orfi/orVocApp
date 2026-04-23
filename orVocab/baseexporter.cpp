@@ -2,7 +2,6 @@
 
 #include "networkclient.h"
 
-#include <QEventLoop>
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
 #include <QNetworkRequest>
@@ -17,91 +16,73 @@ BaseExporter::BaseExporter(const QStringList &words, QObject *parent)
 
 BaseExporter::~BaseExporter()
 {
-    if (m_thread) {
-        m_thread->quit();
-        m_thread->wait();
-    }
+    delete m_nam;
 }
 
 void BaseExporter::exportToFile(const QString &outputPath)
 {
     m_outputPath = outputPath;
-    m_thread = QThread::create([this]() { doWork(); });
-    connect(m_thread, &QThread::finished, m_thread, &QThread::deleteLater);
-    m_thread->start();
+    m_nam = new QNetworkAccessManager(this);
+    m_entries.resize(m_words.size());
+    for (int i = 0; i < m_words.size(); ++i)
+        m_entries[i].word = m_words[i];
+    m_currentIndex = 0;
+    fetchNextWord();
 }
 
-void BaseExporter::doWork()
+void BaseExporter::fetchNextWord()
 {
-    m_nam = new QNetworkAccessManager;
-
-    QVector<WordEntry> entries;
-    entries.reserve(m_words.size());
-
-    for (int i = 0; i < m_words.size(); ++i) {
-        WordEntry entry;
-        entry.word = m_words[i];
-        fetchWord(entry.word, entry);
-        entries.append(entry);
-        emit progress(i + 1, m_words.size());
+    if (m_currentIndex >= m_words.size()) {
+        startRender();
+        return;
     }
 
-    QVector<WordEntry> validEntries;
-    for (const auto &e : entries) {
-        if (e.valid)
-            validEntries.append(e);
-    }
+    const QString &word = m_words[m_currentIndex];
 
-    bool success = false;
-    if (!validEntries.isEmpty())
-        success = renderToFile(validEntries, m_outputPath);
-
-    delete m_nam;
-    m_nam = nullptr;
-
-    emit finished(success, m_outputPath);
-    m_thread->quit();
-}
-
-void BaseExporter::fetchWord(const QString &word, WordEntry &entry)
-{
-    QEventLoop loop;
-
-    // Fetch definition
     QUrl defUrl("https://api.dictionaryapi.dev/api/v2/entries/en/" + word);
-    QNetworkReply *defReply = m_nam->get(QNetworkRequest(defUrl));
-    connect(defReply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
-    loop.exec();
+    QNetworkReply *reply = m_nam->get(QNetworkRequest(defUrl));
+    connect(reply, &QNetworkReply::finished, this, [this, reply]() {
+        reply->deleteLater();
+        onDefinitionReply(m_currentIndex, reply);
+    });
+}
 
-    bool defOk = false;
+void BaseExporter::onDefinitionReply(int index, QNetworkReply *defReply)
+{
+    WordEntry &entry = m_entries[index];
+
     if (defReply->error() == QNetworkReply::NoError) {
         auto result = NetworkClient::parseDictionaryResponse(defReply->readAll());
         if (!result.error) {
             entry.definitionHtml = result.html;
             entry.phonetic = result.phonetic;
-            defOk = true;
+
+            QUrl transUrl("https://translate.googleapis.com/translate_a/single");
+            QUrlQuery query;
+            query.addQueryItem("client", "gtx");
+            query.addQueryItem("sl", "en");
+            query.addQueryItem("tl", "ar");
+            query.addQueryItem("dt", "t");
+            query.addQueryItem("q", entry.word);
+            transUrl.setQuery(query);
+
+            QNetworkReply *transReply = m_nam->get(QNetworkRequest(transUrl));
+            connect(transReply, &QNetworkReply::finished, this, [this, transReply]() {
+                transReply->deleteLater();
+                onTranslationReply(m_currentIndex, transReply);
+            });
+            return;
         }
     }
-    defReply->deleteLater();
 
-    if (!defOk) {
-        entry.valid = false;
-        return;
-    }
+    emit progress(m_currentIndex + 1, m_words.size());
+    m_currentIndex++;
+    fetchNextWord();
+}
 
-    // Fetch translation
-    QUrl transUrl("https://translate.googleapis.com/translate_a/single");
-    QUrlQuery query;
-    query.addQueryItem("client", "gtx");
-    query.addQueryItem("sl", "en");
-    query.addQueryItem("tl", "ar");
-    query.addQueryItem("dt", "t");
-    query.addQueryItem("q", word);
-    transUrl.setQuery(query);
-
-    QNetworkReply *transReply = m_nam->get(QNetworkRequest(transUrl));
-    connect(transReply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
-    loop.exec();
+void BaseExporter::onTranslationReply(int index, QNetworkReply *transReply)
+{
+    WordEntry &entry = m_entries[index];
 
     if (transReply->error() == QNetworkReply::NoError) {
         auto result = NetworkClient::parseTranslationResponse(transReply->readAll());
@@ -110,5 +91,29 @@ void BaseExporter::fetchWord(const QString &word, WordEntry &entry)
             entry.valid = true;
         }
     }
-    transReply->deleteLater();
+
+    emit progress(m_currentIndex + 1, m_words.size());
+    m_currentIndex++;
+    fetchNextWord();
+}
+
+void BaseExporter::startRender()
+{
+    QVector<WordEntry> validEntries;
+    for (const auto &e : m_entries) {
+        if (e.valid)
+            validEntries.append(e);
+    }
+
+    if (validEntries.isEmpty()) {
+        emit finished(false, m_outputPath);
+        return;
+    }
+
+    QThread *thread = QThread::create([this, validEntries]() {
+        bool success = renderToFile(validEntries, m_outputPath);
+        emit finished(success, m_outputPath);
+    });
+    connect(thread, &QThread::finished, thread, &QThread::deleteLater);
+    thread->start();
 }
