@@ -21,6 +21,8 @@ qt_add_qml_module(orVocApp
         Sidebar.qml
         TranslationView.qml
         ExportOverlay.qml
+        ExportPopup.qml
+        ImportPopup.qml
     RESOURCES
         splash.png
         icon.png
