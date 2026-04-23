@@ -22,7 +22,8 @@ A lightweight Qt 6 / QML desktop vocabulary builder for personal word bank manag
 - **Arabic Translations** -- powered by Google Translate (GTX API) with full RTL support
 - **Audio Pronunciation** -- play word pronunciations directly in the app
 - **Search & Filter** -- real-time case-insensitive filtering as you type
-- **Import / Export** -- JSON and plain-text formats for portability
+- **PDF Dictionary Export** -- generate a formatted PDF dictionary with cover page, letter tabs, and spacious entry layout (A4 or Letter)
+- **Import / Export** -- JSON and plain-text formats for portability, consolidated toolbar with format selection popups
 - **Dark Blue Theme** -- off-white text on dark blue, easy on the eyes
 - **Splash Screen** -- branded launch screen
 - **Cross-Platform** -- targets Ubuntu/Linux and Windows 10/11
@@ -77,9 +78,11 @@ build\orVocab\Release\orVocApp  # Windows
 cd build && ctest --output-on-failure
 ```
 
-6 unit tests covering:
+11 unit tests covering:
 - VocabManager: add/remove, filtering, JSON persistence, import/export
 - NetworkClient: dictionary API parsing, translation API parsing
+- WordEntry: default state validation
+- PdfExporter: letter color uniqueness, PDF file generation (A4 + Letter), multiple letter groups
 
 ## Packaging
 
@@ -109,13 +112,18 @@ orVocab/
   main.cpp              # Entry point, singleton registration, splash screen
   vocabmanager.h/cpp    # Word bank CRUD, JSON persistence, import/export
   networkclient.h/cpp   # REST API calls, response parsing
+  baseexporter.h/cpp    # Abstract base class for exporters
+  pdfexporter.h/cpp     # PDF dictionary export (async, threaded rendering)
   Main.qml              # Root layout, toolbar, file dialogs
   Sidebar.qml           # Word list, search/add, context menu
   TranslationView.qml   # Definition display, Arabic RTL, audio playback
-  SplashScreen.qml      # 3-second branded splash
+  ExportOverlay.qml     # Toolbar progress bar and export notification
+  ExportPopup.qml       # Export format selection dropdown (JSON/Text/PDF)
+  ImportPopup.qml       # Import format selection dropdown (JSON/Text)
 tests/
   test_vocabmanager.cpp  # VocabManager unit tests (Catch2)
   test_networkclient.cpp # NetworkClient unit tests (Catch2)
+  test_pdfexporter.cpp   # PdfExporter unit tests (Catch2)
 packaging/
   orvocapp.desktop       # Linux desktop entry
   orvocapp-wrapper.sh    # Runtime environment wrapper
