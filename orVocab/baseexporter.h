@@ -26,7 +26,7 @@ public:
     explicit BaseExporter(const QStringList &words, QObject *parent = nullptr);
     ~BaseExporter() override;
 
-    void exportToFile(const QString &outputPath);
+    Q_INVOKABLE void exportToFile(const QString &outputPath);
 
 signals:
     void progress(int current, int total);
