@@ -12,6 +12,7 @@ ApplicationWindow {
     title: "orVocApp"
 
     property string currentWord: ""
+    property int selectedPageSize: 0
 
     palette.window: "#0a1628"
     palette.base: "#101e36"
@@ -52,6 +53,16 @@ ApplicationWindow {
             Button {
                 text: "Export Text"
                 onClicked: exportTextDialog.open()
+            }
+            ExportOverlay {
+                id: exportOverlay
+            }
+
+            Button {
+                text: "Export PDF"
+                enabled: !exportOverlay.exporting
+                opacity: enabled ? 1.0 : 0.4
+                onClicked: pageSizeDialog.open()
             }
         }
     }
@@ -131,5 +142,52 @@ ApplicationWindow {
         }
 
         onAccepted: VocabManager.importJson(importJsonDialog.file)
+    }
+
+    Dialog {
+        id: pageSizeDialog
+        title: "Select Page Size"
+        modal: true
+        anchors.centerIn: parent
+        standardButtons: Dialog.Cancel
+
+        RowLayout {
+            spacing: 12
+
+            Button {
+                text: "A4"
+                onClicked: {
+                    pageSizeDialog.close();
+                    root.selectedPageSize = 0;
+                    exportPdfDialog.open();
+                }
+            }
+
+            Button {
+                text: "Letter"
+                onClicked: {
+                    pageSizeDialog.close();
+                    root.selectedPageSize = 1;
+                    exportPdfDialog.open();
+                }
+            }
+        }
+    }
+
+    Platform.FileDialog {
+        id: exportPdfDialog
+        title: "Export PDF Dictionary"
+        fileMode: Platform.FileDialog.SaveFile
+        defaultSuffix: "pdf"
+        nameFilters: ["PDF files (*.pdf)"]
+        onAccepted: {
+            var exporter = VocabManager.createPdfExporter(root.selectedPageSize);
+            exportOverlay.startExport(VocabManager.words.length);
+            exporter.progress.connect(exportOverlay.updateProgress);
+            exporter.finished.connect(function(success, path) {
+                exportOverlay.showResult(success);
+            });
+            exporter.exportToFile(exportPdfDialog.file.toString().replace("file://", ""));
+        }
     }
 }

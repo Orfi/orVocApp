@@ -1,4 +1,4 @@
-find_package(Qt6 REQUIRED COMPONENTS Quick Network Multimedia QuickDialogs2 Widgets)
+find_package(Qt6 REQUIRED COMPONENTS Quick Network Multimedia QuickDialogs2 Widgets PrintSupport)
 
 qt_standard_project_setup(REQUIRES 6.8)
 
@@ -8,6 +8,10 @@ qt_add_executable(orVocApp
     vocabmanager.cpp
     networkclient.h
     networkclient.cpp
+    baseexporter.h
+    baseexporter.cpp
+    pdfexporter.h
+    pdfexporter.cpp
 )
 
 qt_add_qml_module(orVocApp
@@ -16,6 +20,7 @@ qt_add_qml_module(orVocApp
         Main.qml
         Sidebar.qml
         TranslationView.qml
+        ExportOverlay.qml
     RESOURCES
         splash.png
         icon.png
@@ -41,6 +46,7 @@ target_link_libraries(orVocApp
         Qt6::Multimedia
         Qt6::QuickDialogs2
         Qt6::Widgets
+        Qt6::PrintSupport
 )
 
 include(GNUInstallDirs)

@@ -1,11 +1,13 @@
 // orVocab/vocabmanager.cpp
 #include "vocabmanager.h"
+#include "pdfexporter.h"
 #include <algorithm>
 #include <QDir>
 #include <QFile>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QPageSize>
 #include <QStandardPaths>
 
 VocabManager::VocabManager(QObject *parent)
@@ -224,6 +226,13 @@ void VocabManager::importText(const QUrl &path)
     m_sourceModel->setStringList(current);
     saveToJson();
     emit wordsChanged();
+}
+
+QObject* VocabManager::createPdfExporter(int pageSize)
+{
+    auto sizeId = (pageSize == 0) ? QPageSize::A4 : QPageSize::Letter;
+    auto *exporter = new PdfExporter(words(), sizeId);
+    return exporter;
 }
 
 QString VocabManager::dataFilePath() const
