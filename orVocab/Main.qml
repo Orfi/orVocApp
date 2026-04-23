@@ -54,6 +54,10 @@ ApplicationWindow {
                 text: "Export Text"
                 onClicked: exportTextDialog.open()
             }
+            ExportOverlay {
+                id: exportOverlay
+            }
+
             Button {
                 text: "Export PDF"
                 onClicked: pageSizeDialog.open()
@@ -86,10 +90,6 @@ ApplicationWindow {
             SplitView.fillWidth: true
             currentWord: root.currentWord
         }
-    }
-
-    ExportOverlay {
-        id: exportOverlay
     }
 
     // File dialogs (Qt.labs.platform avoids portal freeze on Linux)

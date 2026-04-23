@@ -2,31 +2,20 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 
-Rectangle {
+Item {
     id: overlay
-    anchors.right: parent.right
-    anchors.bottom: parent.bottom
-    anchors.margins: 16
-    width: 280
-    height: progressColumn.implicitHeight + 16
-    z: 100
-    color: palette.base
-    radius: 6
-    border.color: palette.mid
-    border.width: 1
-    visible: exporting || progressColumn.opacity > 0 || notificationLabel.opacity > 0
+    Layout.preferredWidth: visible ? 220 : 0
+    Layout.fillHeight: true
+    visible: exporting || notificationLabel.opacity > 0
 
     property int current: 0
     property int total: 0
     property bool exporting: false
 
-    signal exportComplete(bool success)
-
     function startExport(wordCount) {
         current = 0;
         total = wordCount;
         exporting = true;
-        progressColumn.opacity = 1;
         notificationLabel.opacity = 0;
         notificationLabel.text = "";
     }
@@ -38,7 +27,6 @@ Rectangle {
 
     function showResult(success) {
         exporting = false;
-        fadeOutProgress.start();
         if (success) {
             notificationLabel.text = "PDF exported successfully";
             notificationLabel.color = "#27ae60";
@@ -46,50 +34,32 @@ Rectangle {
             notificationLabel.text = "Export failed";
             notificationLabel.color = "#e74c3c";
         }
+        fadeInNotification.start();
     }
 
-    Column {
-        id: progressColumn
+    RowLayout {
         anchors.fill: parent
-        anchors.margins: 8
-        spacing: 4
-        visible: opacity > 0
-
-        Behavior on opacity {
-            enabled: false
-        }
+        spacing: 6
+        visible: overlay.exporting
 
         Label {
-            text: "Exporting... " + overlay.current + "/" + overlay.total + " words"
-            font.pixelSize: 12
-            visible: overlay.exporting
+            text: overlay.current + "/" + overlay.total
+            font.pixelSize: 11
         }
 
         ProgressBar {
-            width: parent.width
+            Layout.fillWidth: true
+            Layout.preferredHeight: 14
             from: 0
             to: overlay.total
             value: overlay.current
-            visible: overlay.exporting
         }
-    }
-
-    NumberAnimation {
-        id: fadeOutProgress
-        target: progressColumn
-        property: "opacity"
-        from: 1
-        to: 0
-        duration: 300
-        onFinished: fadeInNotification.start()
     }
 
     Label {
         id: notificationLabel
-        anchors.right: parent.right
-        anchors.bottom: parent.bottom
-        anchors.margins: 8
-        font.pixelSize: 13
+        anchors.centerIn: parent
+        font.pixelSize: 12
         font.bold: true
         opacity: 0
         visible: opacity > 0
