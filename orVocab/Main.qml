@@ -60,6 +60,7 @@ ApplicationWindow {
 
             Button {
                 text: "Export PDF"
+                enabled: !exportOverlay.exporting
                 onClicked: pageSizeDialog.open()
             }
         }
