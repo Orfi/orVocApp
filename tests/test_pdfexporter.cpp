@@ -4,8 +4,9 @@
 #include "networkclient.h"
 #include "pdfexporter.h"
 
-#include <QCoreApplication>
+#include <QColor>
 #include <QFile>
+#include <QGuiApplication>
 #include <QPageSize>
 #include <QTemporaryDir>
 
@@ -32,7 +33,7 @@ TEST_CASE("PdfExporter letterColor produces unique colors", "[pdfexporter]") {
 }
 
 TEST_CASE("PdfExporter renderToFile produces a PDF file", "[pdfexporter]") {
-    QCoreApplication app(argc, argv);
+    QGuiApplication app(argc, argv);
 
     QTemporaryDir tmpDir;
     REQUIRE(tmpDir.isValid());
@@ -56,7 +57,7 @@ TEST_CASE("PdfExporter renderToFile produces a PDF file", "[pdfexporter]") {
 }
 
 TEST_CASE("PdfExporter renderToFile works with Letter page size", "[pdfexporter]") {
-    QCoreApplication app(argc, argv);
+    QGuiApplication app(argc, argv);
 
     QTemporaryDir tmpDir;
     REQUIRE(tmpDir.isValid());
@@ -79,7 +80,7 @@ TEST_CASE("PdfExporter renderToFile works with Letter page size", "[pdfexporter]
 }
 
 TEST_CASE("PdfExporter renderToFile handles multiple letter groups", "[pdfexporter]") {
-    QCoreApplication app(argc, argv);
+    QGuiApplication app(argc, argv);
 
     QTemporaryDir tmpDir;
     REQUIRE(tmpDir.isValid());

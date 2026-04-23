@@ -1,4 +1,4 @@
-find_package(Qt6 REQUIRED COMPONENTS Core Network PrintSupport)
+find_package(Qt6 REQUIRED COMPONENTS Core Network Gui Widgets PrintSupport)
 find_package(Catch2 3 REQUIRED)
 
 add_executable(orVocabTests
@@ -20,6 +20,8 @@ target_link_libraries(orVocabTests
         Catch2::Catch2WithMain
         Qt6::Core
         Qt6::Network
+        Qt6::Gui
+        Qt6::Widgets
         Qt6::PrintSupport
 )
 
