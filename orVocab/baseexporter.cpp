@@ -6,6 +6,7 @@
 #include <QNetworkReply>
 #include <QNetworkRequest>
 #include <QThread>
+#include <QTimer>
 #include <QUrlQuery>
 
 BaseExporter::BaseExporter(const QStringList &words, QObject *parent)
@@ -77,7 +78,7 @@ void BaseExporter::onDefinitionReply(int index, QNetworkReply *defReply)
 
     emit progress(m_currentIndex + 1, m_words.size());
     m_currentIndex++;
-    fetchNextWord();
+    QTimer::singleShot(150, this, &BaseExporter::fetchNextWord);
 }
 
 void BaseExporter::onTranslationReply(int index, QNetworkReply *transReply)
@@ -94,7 +95,7 @@ void BaseExporter::onTranslationReply(int index, QNetworkReply *transReply)
 
     emit progress(m_currentIndex + 1, m_words.size());
     m_currentIndex++;
-    fetchNextWord();
+    QTimer::singleShot(150, this, &BaseExporter::fetchNextWord);
 }
 
 void BaseExporter::startRender()
