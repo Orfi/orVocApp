@@ -37,6 +37,12 @@ ApplicationWindow {
             Label {
                 text: "orVocApp"
                 font.bold: true
+            }
+
+            Label {
+                text: VocabManager.words.length + " words"
+                color: "#27ae60"
+                font.pixelSize: 12
                 Layout.fillWidth: true
             }
 
