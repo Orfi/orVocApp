@@ -93,20 +93,15 @@ void PdfExporter::drawCoverPage(QPainter &painter, int wordCount, const QRectF &
     qreal centerX = pageRect.width() / 2.0;
     qreal centerY = pageRect.height() / 2.0;
 
-    // Rainbow gradient lines (top and bottom)
+    // Decorative lines (top and bottom)
     qreal lineY_top = pageRect.height() * 0.15;
     qreal lineY_bottom = pageRect.height() * 0.85;
     qreal lineLeft = pageRect.width() * 0.1;
     qreal lineRight = pageRect.width() * 0.9;
-    qreal lineWidth = lineRight - lineLeft;
 
+    QColor darkBlue("#1a365d");
     for (qreal pos : {lineY_top, lineY_bottom}) {
-        int segments = 26;
-        qreal segWidth = lineWidth / segments;
-        for (int i = 0; i < segments; ++i) {
-            painter.fillRect(QRectF(lineLeft + i * segWidth, pos, segWidth, 4),
-                             letterColor(i));
-        }
+        painter.fillRect(QRectF(lineLeft, pos, lineRight - lineLeft, 3), darkBlue);
     }
 
     // Title
