@@ -196,13 +196,13 @@ qreal PdfExporter::measureWordEntry(const WordEntry &entry, const QRectF &pageRe
     doc.setTextWidth(contentWidth);
 
     QString html = QString(
-        "<div style='font-family: Georgia, serif;'>"
-        "<p style='font-size: 18px; font-weight: bold; margin: 0;'>%1</p>"
+        "<div style='font-family: Georgia, serif; color: #000;'>"
+        "<p style='font-size: 18px; font-weight: bold; color: #000; margin: 0;'>%1</p>"
         "<p style='font-size: 11px; color: #666; margin: 2px 0 8px 0;'>%2</p>"
-        "%3"
+        "<div style='color: #222;'>%3</div>"
         "<div style='margin-top: 8px; padding: 6px 10px; background: #f8f8f8; "
         "border: 1px solid #ddd; border-radius: 4px; text-align: right; "
-        "direction: rtl; font-size: 15px;'>%4</div>"
+        "direction: rtl; font-size: 15px; color: #000;'>%4</div>"
         "</div>")
         .arg(entry.word.toHtmlEscaped(),
              entry.phonetic.toHtmlEscaped(),
@@ -221,13 +221,13 @@ qreal PdfExporter::drawWordEntry(QPainter &painter, const WordEntry &entry, qrea
     doc.setTextWidth(contentWidth);
 
     QString html = QString(
-        "<div style='font-family: Georgia, serif;'>"
-        "<p style='font-size: 18px; font-weight: bold; margin: 0;'>%1</p>"
+        "<div style='font-family: Georgia, serif; color: #000;'>"
+        "<p style='font-size: 18px; font-weight: bold; color: #000; margin: 0;'>%1</p>"
         "<p style='font-size: 11px; color: #666; margin: 2px 0 8px 0;'>%2</p>"
-        "%3"
+        "<div style='color: #222;'>%3</div>"
         "<div style='margin-top: 8px; padding: 6px 10px; background: #f8f8f8; "
         "border: 1px solid #ddd; border-radius: 4px; text-align: right; "
-        "direction: rtl; font-size: 15px;'>%4</div>"
+        "direction: rtl; font-size: 15px; color: #000;'>%4</div>"
         "</div>")
         .arg(entry.word.toHtmlEscaped(),
              entry.phonetic.toHtmlEscaped(),
