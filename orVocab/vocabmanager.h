@@ -36,6 +36,8 @@ public:
     Q_INVOKABLE void importJson(const QUrl &path);
     Q_INVOKABLE void importText(const QUrl &path);
 
+    Q_INVOKABLE QObject* createPdfExporter(int pageSize);
+
 signals:
     void wordsChanged();
 
