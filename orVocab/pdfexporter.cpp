@@ -28,7 +28,7 @@ QColor PdfExporter::letterColor(int letterIndex)
 
 bool PdfExporter::renderToFile(const QVector<WordEntry> &entries, const QString &outputPath)
 {
-    QPrinter printer(QPrinter::HighResolution);
+    QPrinter printer(QPrinter::ScreenResolution);
     printer.setOutputFormat(QPrinter::PdfFormat);
     printer.setOutputFileName(outputPath);
     printer.setPageSize(QPageSize(m_pageSize));
