@@ -59,6 +59,8 @@ ApplicationWindow {
             Button {
                 id: importButton
                 text: "Import"
+                enabled: !exportOverlay.exporting
+                opacity: enabled ? 1.0 : 0.4
                 onClicked: importPopup.open()
             }
         }
@@ -70,6 +72,8 @@ ApplicationWindow {
         Sidebar {
             SplitView.preferredWidth: 220
             SplitView.minimumWidth: 150
+            enabled: !exportOverlay.exporting
+            opacity: exportOverlay.exporting ? 0.4 : 1.0
 
             onWordClicked: function(word) {
                 root.currentWord = word;
