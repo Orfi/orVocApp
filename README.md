@@ -117,7 +117,7 @@ orVocab/
   Main.qml              # Root layout, toolbar, file dialogs
   Sidebar.qml           # Word list, search/add, context menu
   TranslationView.qml   # Definition display, Arabic RTL, audio playback
-  ExportOverlay.qml     # Toolbar progress bar and export notification
+  NotificationOverlay.qml # Toolbar progress bar and fading notifications
   ExportPopup.qml       # Export format selection dropdown (JSON/Text/PDF)
   ImportPopup.qml       # Import format selection dropdown (JSON/Text)
 tests/
