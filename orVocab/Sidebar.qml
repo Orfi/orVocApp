@@ -13,6 +13,20 @@ Rectangle {
     signal wordClicked(string word)
     signal wordDeleted(string word)
 
+    signal validationFailed()
+
+    property bool validating: false
+    property string pendingWord: ""
+
+    function selectAndScrollTo(word) {
+        var idx = VocabManager.indexOfWord(word);
+        if (idx >= 0) {
+            wordList.currentIndex = idx;
+            wordList.positionViewAtIndex(idx, ListView.Contain);
+            sidebar.wordClicked(word);
+        }
+    }
+
     ColumnLayout {
         anchors.fill: parent
         spacing: 0
@@ -26,6 +40,7 @@ Rectangle {
                 id: searchField
                 Layout.fillWidth: true
                 placeholderText: "Search or add word..."
+                enabled: !sidebar.validating
                 onTextChanged: VocabManager.filterWords(text)
                 onAccepted: addButton.clicked()
             }
@@ -33,18 +48,14 @@ Rectangle {
             Button {
                 id: addButton
                 text: "Add"
+                enabled: !sidebar.validating && searchField.text.trim() !== ""
                 onClicked: {
                     if (searchField.text.trim() === "")
                         return;
                     var word = searchField.text.trim().toLowerCase();
                     VocabManager.addWord(searchField.text);
                     searchField.text = "";
-                    var idx = VocabManager.indexOfWord(word);
-                    if (idx >= 0) {
-                        wordList.currentIndex = idx;
-                        wordList.positionViewAtIndex(idx, ListView.Contain);
-                        sidebar.wordClicked(word);
-                    }
+                    sidebar.selectAndScrollTo(word);
                 }
             }
         }
