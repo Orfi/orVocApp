@@ -70,6 +70,7 @@ ApplicationWindow {
         anchors.fill: parent
 
         Sidebar {
+            id: sidebar
             SplitView.preferredWidth: 220
             SplitView.minimumWidth: 150
             enabled: !notificationOverlay.exporting
@@ -97,6 +98,7 @@ ApplicationWindow {
             id: translationView
             SplitView.fillWidth: true
             currentWord: root.currentWord
+            suppressUpdates: sidebar.validating
         }
     }
 

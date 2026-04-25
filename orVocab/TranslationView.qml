@@ -16,6 +16,7 @@ Rectangle {
     property string definitionError: ""
     property string translationError: ""
     property bool wantsToPlay: false
+    property bool suppressUpdates: false
 
     function lookupWord(word) {
         currentWord = word;
@@ -49,6 +50,7 @@ Rectangle {
 
     Connections {
         target: NetworkClient
+        enabled: !translationView.suppressUpdates
 
         function onDefinitionReady(html) {
             translationView.definitionHtml = html;
