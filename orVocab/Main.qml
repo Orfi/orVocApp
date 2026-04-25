@@ -77,7 +77,7 @@ ApplicationWindow {
             opacity: notificationOverlay.exporting ? 0.4 : 1.0
 
             onValidationFailed: notificationOverlay.showNotification(
-                "Could not validate word — check input and connection",
+                "Could not validate input",
                 true
             )
 
