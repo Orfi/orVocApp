@@ -120,6 +120,7 @@ Rectangle {
             clip: true
             currentIndex: -1
             enabled: !sidebar.validating
+            ScrollBar.vertical: ScrollBar { policy: ScrollBar.AsNeeded }
 
             delegate: ItemDelegate {
                 width: wordList.width
