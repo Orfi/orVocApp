@@ -33,8 +33,8 @@ Rectangle {
             return;
 
         if (VocabManager.indexOfWord(word) >= 0) {
-            sidebar.selectAndScrollTo(word);
             searchField.text = "";
+            sidebar.selectAndScrollTo(word);
             return;
         }
 
