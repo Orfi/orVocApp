@@ -75,6 +75,11 @@ ApplicationWindow {
             enabled: !notificationOverlay.exporting
             opacity: notificationOverlay.exporting ? 0.4 : 1.0
 
+            onValidationFailed: notificationOverlay.showNotification(
+                "Could not validate! Please check your input and connection!",
+                true
+            )
+
             onWordClicked: function(word) {
                 root.currentWord = word;
                 translationView.lookupWord(word);
