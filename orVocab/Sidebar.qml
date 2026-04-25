@@ -119,6 +119,7 @@ Rectangle {
             model: VocabManager.wordModel
             clip: true
             currentIndex: -1
+            enabled: !sidebar.validating
 
             delegate: ItemDelegate {
                 width: wordList.width
