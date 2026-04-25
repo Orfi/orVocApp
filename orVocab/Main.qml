@@ -46,8 +46,8 @@ ApplicationWindow {
                 Layout.fillWidth: true
             }
 
-            ExportOverlay {
-                id: exportOverlay
+            NotificationOverlay {
+                id: notificationOverlay
             }
 
             Button {
@@ -59,7 +59,7 @@ ApplicationWindow {
             Button {
                 id: importButton
                 text: "Import"
-                enabled: !exportOverlay.exporting
+                enabled: !notificationOverlay.exporting
                 opacity: enabled ? 1.0 : 0.4
                 onClicked: importPopup.open()
             }
@@ -70,10 +70,16 @@ ApplicationWindow {
         anchors.fill: parent
 
         Sidebar {
+            id: sidebar
             SplitView.preferredWidth: 220
             SplitView.minimumWidth: 150
-            enabled: !exportOverlay.exporting
-            opacity: exportOverlay.exporting ? 0.4 : 1.0
+            enabled: !notificationOverlay.exporting
+            opacity: notificationOverlay.exporting ? 0.4 : 1.0
+
+            onValidationFailed: notificationOverlay.showNotification(
+                "Could not validate input",
+                true
+            )
 
             onWordClicked: function(word) {
                 root.currentWord = word;
@@ -92,6 +98,7 @@ ApplicationWindow {
             id: translationView
             SplitView.fillWidth: true
             currentWord: root.currentWord
+            suppressUpdates: sidebar.validating
         }
     }
 
@@ -150,7 +157,7 @@ ApplicationWindow {
         parent: exportButton
         x: exportButton.width - width
         y: exportButton.height
-        exporting: exportOverlay.exporting
+        exporting: notificationOverlay.exporting
 
         onExportRequested: function(format, pageSize) {
             if (format === "json") {
@@ -187,10 +194,10 @@ ApplicationWindow {
         nameFilters: ["PDF files (*.pdf)"]
         onAccepted: {
             var exporter = VocabManager.createPdfExporter(root.selectedPageSize);
-            exportOverlay.startExport(VocabManager.words.length);
-            exporter.progress.connect(exportOverlay.updateProgress);
+            notificationOverlay.startExport(VocabManager.words.length);
+            exporter.progress.connect(notificationOverlay.updateProgress);
             exporter.finished.connect(function(success, path) {
-                exportOverlay.showResult(success);
+                notificationOverlay.showResult(success);
             });
             exporter.exportToFile(exportPdfDialog.file.toString().replace("file://", ""));
         }

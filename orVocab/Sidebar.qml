@@ -13,6 +13,73 @@ Rectangle {
     signal wordClicked(string word)
     signal wordDeleted(string word)
 
+    signal validationFailed()
+
+    property bool validating: false
+    property string pendingWord: ""
+
+    function selectAndScrollTo(word) {
+        var idx = VocabManager.indexOfWord(word);
+        if (idx >= 0) {
+            wordList.currentIndex = idx;
+            wordList.positionViewAtIndex(idx, ListView.Contain);
+            sidebar.wordClicked(word);
+        }
+    }
+
+    function attemptAdd() {
+        var word = searchField.text.trim().toLowerCase();
+        if (word === "")
+            return;
+
+        if (VocabManager.indexOfWord(word) >= 0) {
+            searchField.text = "";
+            sidebar.selectAndScrollTo(word);
+            return;
+        }
+
+        sidebar.pendingWord = word;
+        sidebar.validating = true;
+        validationTimeout.restart();
+        NetworkClient.fetchDefinition(word);
+    }
+
+    Connections {
+        target: NetworkClient
+        enabled: sidebar.validating
+
+        function onDefinitionReady(html) {
+            validationTimeout.stop();
+            VocabManager.addWord(sidebar.pendingWord);
+            searchField.text = "";
+            sidebar.selectAndScrollTo(sidebar.pendingWord);
+            sidebar.validating = false;
+            sidebar.pendingWord = "";
+        }
+
+        function onRequestFailed(area, errorString) {
+            if (area !== "definition")
+                return;
+            validationTimeout.stop();
+            sidebar.validationFailed();
+            sidebar.validating = false;
+            sidebar.pendingWord = "";
+        }
+    }
+
+    Timer {
+        id: validationTimeout
+        interval: 5000
+        repeat: false
+        onTriggered: {
+            if (!sidebar.validating)
+                return;
+            sidebar.validationFailed();
+            sidebar.validating = false;
+            sidebar.pendingWord = "";
+        }
+    }
+
     ColumnLayout {
         anchors.fill: parent
         spacing: 0
@@ -26,26 +93,16 @@ Rectangle {
                 id: searchField
                 Layout.fillWidth: true
                 placeholderText: "Search or add word..."
+                enabled: !sidebar.validating
                 onTextChanged: VocabManager.filterWords(text)
-                onAccepted: addButton.clicked()
+                onAccepted: sidebar.attemptAdd()
             }
 
             Button {
                 id: addButton
                 text: "Add"
-                onClicked: {
-                    if (searchField.text.trim() === "")
-                        return;
-                    var word = searchField.text.trim().toLowerCase();
-                    VocabManager.addWord(searchField.text);
-                    searchField.text = "";
-                    var idx = VocabManager.indexOfWord(word);
-                    if (idx >= 0) {
-                        wordList.currentIndex = idx;
-                        wordList.positionViewAtIndex(idx, ListView.Contain);
-                        sidebar.wordClicked(word);
-                    }
-                }
+                enabled: !sidebar.validating && searchField.text.trim() !== ""
+                onClicked: sidebar.attemptAdd()
             }
         }
 
@@ -62,6 +119,11 @@ Rectangle {
             model: VocabManager.wordModel
             clip: true
             currentIndex: -1
+            enabled: !sidebar.validating
+            ScrollBar.vertical: ScrollBar {
+                policy: ScrollBar.AsNeeded
+                active: true
+            }
 
             delegate: ItemDelegate {
                 width: wordList.width

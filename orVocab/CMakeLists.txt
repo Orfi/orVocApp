@@ -20,7 +20,7 @@ qt_add_qml_module(orVocApp
         Main.qml
         Sidebar.qml
         TranslationView.qml
-        ExportOverlay.qml
+        NotificationOverlay.qml
         ExportPopup.qml
         ImportPopup.qml
     RESOURCES

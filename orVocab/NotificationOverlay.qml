@@ -25,16 +25,20 @@ Item {
         total = tot;
     }
 
+    function showNotification(text, isError) {
+        fadeOutNotification.stop();
+        holdTimer.stop();
+        notificationLabel.text = text;
+        notificationLabel.color = isError ? "#e74c3c" : "#27ae60";
+        fadeInNotification.start();
+    }
+
     function showResult(success) {
         exporting = false;
-        if (success) {
-            notificationLabel.text = "PDF exported successfully";
-            notificationLabel.color = "#27ae60";
-        } else {
-            notificationLabel.text = "Export failed";
-            notificationLabel.color = "#e74c3c";
-        }
-        fadeInNotification.start();
+        showNotification(
+            success ? "PDF exported successfully" : "Export failed",
+            !success
+        );
     }
 
     RowLayout {
@@ -81,7 +85,7 @@ Item {
 
     Timer {
         id: holdTimer
-        interval: 4000
+        interval: 3000
         onTriggered: fadeOutNotification.start()
     }
 

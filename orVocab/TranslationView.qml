@@ -16,6 +16,7 @@ Rectangle {
     property string definitionError: ""
     property string translationError: ""
     property bool wantsToPlay: false
+    property bool suppressUpdates: false
 
     function lookupWord(word) {
         currentWord = word;
@@ -49,6 +50,7 @@ Rectangle {
 
     Connections {
         target: NetworkClient
+        enabled: !translationView.suppressUpdates
 
         function onDefinitionReady(html) {
             translationView.definitionHtml = html;
@@ -129,6 +131,8 @@ Rectangle {
 
             Button {
                 text: "\u25B6  Pronunciation"
+                leftPadding: 16
+                rightPadding: 16
                 enabled: audioSource.toString() !== ""
                 opacity: enabled ? 1.0 : 0.4
                 onClicked: {
@@ -154,49 +158,81 @@ Rectangle {
 
         // English Definition
         GroupBox {
+            id: englishGroup
             Layout.fillWidth: true
             Layout.fillHeight: true
             title: "English Definition"
+            label: Label {
+                text: englishGroup.title
+                font.pixelSize: 16
+                font.bold: true
+                color: palette.text
+            }
 
-            ScrollView {
+            Flickable {
+                id: englishFlick
                 anchors.fill: parent
                 clip: true
+                contentWidth: width
+                contentHeight: englishText.implicitHeight
+
+                ScrollBar.vertical: ScrollBar {
+                    policy: ScrollBar.AsNeeded
+                    active: true
+                }
 
                 Text {
-                    width: parent.width
+                    id: englishText
+                    width: englishFlick.width
                     textFormat: Text.RichText
                     wrapMode: Text.Wrap
                     text: definitionError !== "" ? "<p style='color: #e74c3c;'>" + definitionError + "</p>" : definitionHtml
                     color: palette.text
                     visible: definitionHtml !== "" || definitionError !== ""
                 }
+            }
 
-                Label {
-                    anchors.centerIn: parent
-                    text: "Select a word to see its definition"
-                    opacity: 0.5
-                    visible: definitionHtml === "" && definitionError === "" && currentWord === ""
-                }
+            Label {
+                anchors.centerIn: parent
+                text: "Select a word to see its definition"
+                opacity: 0.5
+                visible: definitionHtml === "" && definitionError === "" && currentWord === ""
+            }
 
-                BusyIndicator {
-                    anchors.centerIn: parent
-                    running: currentWord !== "" && definitionHtml === "" && definitionError === ""
-                }
+            BusyIndicator {
+                anchors.centerIn: parent
+                running: currentWord !== "" && definitionHtml === "" && definitionError === ""
             }
         }
 
         // Arabic Translation
         GroupBox {
+            id: arabicGroup
             Layout.fillWidth: true
             Layout.preferredHeight: 120
             title: "Arabic Translation"
+            label: Label {
+                text: arabicGroup.title
+                font.pixelSize: 16
+                font.bold: true
+                color: palette.text
+            }
 
-            ScrollView {
+            Flickable {
+                id: arabicFlick
                 anchors.fill: parent
                 clip: true
+                contentWidth: width
+                contentHeight: arabicText.implicitHeight
+
+                ScrollBar.vertical: ScrollBar {
+                    policy: ScrollBar.AsNeeded
+                    active: true
+                }
 
                 Text {
-                    width: parent.width
+                    id: arabicText
+                    width: arabicFlick.width
                     textFormat: Text.RichText
                     wrapMode: Text.Wrap
                     horizontalAlignment: Text.AlignRight
@@ -204,18 +240,18 @@ Rectangle {
                     color: palette.text
                     visible: translationHtml !== "" || translationError !== ""
                 }
+            }
 
-                Label {
-                    anchors.centerIn: parent
-                    text: "Translation will appear here"
-                    opacity: 0.5
-                    visible: translationHtml === "" && translationError === "" && currentWord === ""
-                }
+            Label {
+                anchors.centerIn: parent
+                text: "Translation will appear here"
+                opacity: 0.5
+                visible: translationHtml === "" && translationError === "" && currentWord === ""
+            }
 
-                BusyIndicator {
-                    anchors.centerIn: parent
-                    running: currentWord !== "" && translationHtml === "" && translationError === ""
-                }
+            BusyIndicator {
+                anchors.centerIn: parent
+                running: currentWord !== "" && translationHtml === "" && translationError === ""
             }
         }
     }
