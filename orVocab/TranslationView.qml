@@ -131,6 +131,8 @@ Rectangle {
 
             Button {
                 text: "\u25B6  Pronunciation"
+                leftPadding: 16
+                rightPadding: 16
                 enabled: audioSource.toString() !== ""
                 opacity: enabled ? 1.0 : 0.4
                 onClicked: {
