@@ -168,12 +168,13 @@ Rectangle {
             }
 
             ScrollView {
+                id: englishScroll
                 anchors.fill: parent
                 clip: true
                 ScrollBar.vertical: ScrollBar { policy: ScrollBar.AsNeeded }
 
                 Text {
-                    width: parent.width
+                    width: englishScroll.availableWidth
                     textFormat: Text.RichText
                     wrapMode: Text.Wrap
                     text: definitionError !== "" ? "<p style='color: #e74c3c;'>" + definitionError + "</p>" : definitionHtml
@@ -209,12 +210,13 @@ Rectangle {
             }
 
             ScrollView {
+                id: arabicScroll
                 anchors.fill: parent
                 clip: true
                 ScrollBar.vertical: ScrollBar { policy: ScrollBar.AsNeeded }
 
                 Text {
-                    width: parent.width
+                    width: arabicScroll.availableWidth
                     textFormat: Text.RichText
                     wrapMode: Text.Wrap
                     horizontalAlignment: Text.AlignRight
