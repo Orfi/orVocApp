@@ -174,7 +174,10 @@ Rectangle {
                 contentWidth: width
                 contentHeight: englishText.implicitHeight
 
-                ScrollBar.vertical: ScrollBar { policy: ScrollBar.AsNeeded }
+                ScrollBar.vertical: ScrollBar {
+                    policy: ScrollBar.AsNeeded
+                    active: true
+                }
 
                 Text {
                     id: englishText
@@ -220,7 +223,10 @@ Rectangle {
                 contentWidth: width
                 contentHeight: arabicText.implicitHeight
 
-                ScrollBar.vertical: ScrollBar { policy: ScrollBar.AsNeeded }
+                ScrollBar.vertical: ScrollBar {
+                    policy: ScrollBar.AsNeeded
+                    active: true
+                }
 
                 Text {
                     id: arabicText
