@@ -167,32 +167,36 @@ Rectangle {
                 color: palette.text
             }
 
-            ScrollView {
-                id: englishScroll
+            Flickable {
+                id: englishFlick
                 anchors.fill: parent
                 clip: true
+                contentWidth: width
+                contentHeight: englishText.implicitHeight
+
                 ScrollBar.vertical: ScrollBar { policy: ScrollBar.AsNeeded }
 
                 Text {
-                    width: englishScroll.availableWidth
+                    id: englishText
+                    width: englishFlick.width
                     textFormat: Text.RichText
                     wrapMode: Text.Wrap
                     text: definitionError !== "" ? "<p style='color: #e74c3c;'>" + definitionError + "</p>" : definitionHtml
                     color: palette.text
                     visible: definitionHtml !== "" || definitionError !== ""
                 }
+            }
 
-                Label {
-                    anchors.centerIn: parent
-                    text: "Select a word to see its definition"
-                    opacity: 0.5
-                    visible: definitionHtml === "" && definitionError === "" && currentWord === ""
-                }
+            Label {
+                anchors.centerIn: parent
+                text: "Select a word to see its definition"
+                opacity: 0.5
+                visible: definitionHtml === "" && definitionError === "" && currentWord === ""
+            }
 
-                BusyIndicator {
-                    anchors.centerIn: parent
-                    running: currentWord !== "" && definitionHtml === "" && definitionError === ""
-                }
+            BusyIndicator {
+                anchors.centerIn: parent
+                running: currentWord !== "" && definitionHtml === "" && definitionError === ""
             }
         }
 
@@ -209,14 +213,18 @@ Rectangle {
                 color: palette.text
             }
 
-            ScrollView {
-                id: arabicScroll
+            Flickable {
+                id: arabicFlick
                 anchors.fill: parent
                 clip: true
+                contentWidth: width
+                contentHeight: arabicText.implicitHeight
+
                 ScrollBar.vertical: ScrollBar { policy: ScrollBar.AsNeeded }
 
                 Text {
-                    width: arabicScroll.availableWidth
+                    id: arabicText
+                    width: arabicFlick.width
                     textFormat: Text.RichText
                     wrapMode: Text.Wrap
                     horizontalAlignment: Text.AlignRight
@@ -224,18 +232,18 @@ Rectangle {
                     color: palette.text
                     visible: translationHtml !== "" || translationError !== ""
                 }
+            }
 
-                Label {
-                    anchors.centerIn: parent
-                    text: "Translation will appear here"
-                    opacity: 0.5
-                    visible: translationHtml === "" && translationError === "" && currentWord === ""
-                }
+            Label {
+                anchors.centerIn: parent
+                text: "Translation will appear here"
+                opacity: 0.5
+                visible: translationHtml === "" && translationError === "" && currentWord === ""
+            }
 
-                BusyIndicator {
-                    anchors.centerIn: parent
-                    running: currentWord !== "" && translationHtml === "" && translationError === ""
-                }
+            BusyIndicator {
+                anchors.centerIn: parent
+                running: currentWord !== "" && translationHtml === "" && translationError === ""
             }
         }
     }
