@@ -163,7 +163,7 @@ Rectangle {
             ScrollView {
                 anchors.fill: parent
                 clip: true
-                ScrollBar.vertical.policy: ScrollBar.AsNeeded
+                ScrollBar.vertical: ScrollBar { policy: ScrollBar.AsNeeded }
 
                 Text {
                     width: parent.width
@@ -197,7 +197,7 @@ Rectangle {
             ScrollView {
                 anchors.fill: parent
                 clip: true
-                ScrollBar.vertical.policy: ScrollBar.AsNeeded
+                ScrollBar.vertical: ScrollBar { policy: ScrollBar.AsNeeded }
 
                 Text {
                     width: parent.width
