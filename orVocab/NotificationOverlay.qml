@@ -26,6 +26,8 @@ Item {
     }
 
     function showNotification(text, isError) {
+        fadeOutNotification.stop();
+        holdTimer.stop();
         notificationLabel.text = text;
         notificationLabel.color = isError ? "#e74c3c" : "#27ae60";
         fadeInNotification.start();
