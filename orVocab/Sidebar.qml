@@ -51,8 +51,8 @@ Rectangle {
         function onDefinitionReady(html) {
             validationTimeout.stop();
             VocabManager.addWord(sidebar.pendingWord);
-            sidebar.selectAndScrollTo(sidebar.pendingWord);
             searchField.text = "";
+            sidebar.selectAndScrollTo(sidebar.pendingWord);
             sidebar.validating = false;
             sidebar.pendingWord = "";
         }
