@@ -156,9 +156,16 @@ Rectangle {
 
         // English Definition
         GroupBox {
+            id: englishGroup
             Layout.fillWidth: true
             Layout.fillHeight: true
             title: "English Definition"
+            label: Label {
+                text: englishGroup.title
+                font.pixelSize: 16
+                font.bold: true
+                color: palette.text
+            }
 
             ScrollView {
                 anchors.fill: parent
@@ -190,9 +197,16 @@ Rectangle {
 
         // Arabic Translation
         GroupBox {
+            id: arabicGroup
             Layout.fillWidth: true
             Layout.preferredHeight: 120
             title: "Arabic Translation"
+            label: Label {
+                text: arabicGroup.title
+                font.pixelSize: 16
+                font.bold: true
+                color: palette.text
+            }
 
             ScrollView {
                 anchors.fill: parent
