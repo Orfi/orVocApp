@@ -4,7 +4,7 @@ import QtQuick.Layouts
 
 Item {
     id: overlay
-    Layout.preferredWidth: visible ? 220 : 0
+    Layout.preferredWidth: visible ? (exporting ? 220 : 400) : 0
     Layout.fillHeight: true
     visible: exporting || notificationLabel.opacity > 0
 
