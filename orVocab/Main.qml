@@ -51,6 +51,41 @@ ApplicationWindow {
             }
 
             Button {
+                id: pronunciationButton
+                implicitWidth: exportButton.implicitHeight
+                implicitHeight: exportButton.implicitHeight
+                padding: 0
+                enabled: translationView.hasAudio
+                opacity: enabled ? 1.0 : 0.4
+                hoverEnabled: true
+                ToolTip.visible: hovered
+                ToolTip.delay: 500
+                ToolTip.text: "Pronunciation"
+
+                background: Rectangle {
+                    radius: width / 2
+                    color: pronunciationButton.down
+                           ? Qt.darker(palette.button, 1.2)
+                           : (pronunciationButton.hovered
+                              ? Qt.lighter(palette.button, 1.15)
+                              : palette.button)
+                    border.color: palette.mid
+                    border.width: 1
+                }
+
+                contentItem: Label {
+                    text: "▶"
+                    color: palette.buttonText
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                    font.pixelSize: 14
+                    leftPadding: 2
+                }
+
+                onClicked: translationView.playPronunciation()
+            }
+
+            Button {
                 id: exportButton
                 text: "Export"
                 onClicked: exportPopup.open()
@@ -99,6 +134,10 @@ ApplicationWindow {
             SplitView.fillWidth: true
             currentWord: root.currentWord
             suppressUpdates: sidebar.validating
+
+            onAudioError: function(message) {
+                notificationOverlay.showNotification(message, true);
+            }
         }
     }
 

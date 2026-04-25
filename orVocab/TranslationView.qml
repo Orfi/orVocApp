@@ -18,6 +18,23 @@ Rectangle {
     property bool wantsToPlay: false
     property bool suppressUpdates: false
 
+    readonly property bool hasAudio: audioSource.toString() !== ""
+
+    signal audioError(string message)
+
+    function playPronunciation() {
+        if (!hasAudio)
+            return;
+        translationView.wantsToPlay = true;
+        if (mediaPlayer.source == audioSource) {
+            mediaPlayer.stop();
+            mediaPlayer.play();
+            translationView.wantsToPlay = false;
+        } else {
+            mediaPlayer.source = audioSource;
+        }
+    }
+
     function lookupWord(word) {
         currentWord = word;
         phonetic = "";
@@ -29,7 +46,6 @@ Rectangle {
         wantsToPlay = false;
         mediaPlayer.stop();
         mediaPlayer.source = "";
-        audioErrorLabel.visible = false;
         NetworkClient.fetchDefinition(word);
         NetworkClient.fetchTranslation(word);
     }
@@ -45,7 +61,6 @@ Rectangle {
         wantsToPlay = false;
         mediaPlayer.stop();
         mediaPlayer.source = "";
-        audioErrorLabel.visible = false;
     }
 
     Connections {
@@ -91,14 +106,12 @@ Rectangle {
             }
             if (mediaStatus === MediaPlayer.InvalidMedia) {
                 translationView.wantsToPlay = false;
-                audioErrorLabel.text = "Audio not available for this word.";
-                audioErrorLabel.visible = true;
+                translationView.audioError("Audio not available for this word.");
             }
         }
         onErrorOccurred: function(error, errorString) {
             translationView.wantsToPlay = false;
-            audioErrorLabel.text = "Audio error: " + errorString;
-            audioErrorLabel.visible = true;
+            translationView.audioError("Audio error: " + errorString);
         }
     }
 
@@ -128,32 +141,6 @@ Rectangle {
             }
 
             Item { Layout.fillWidth: true }
-
-            Button {
-                text: "\u25B6  Pronunciation"
-                leftPadding: 16
-                rightPadding: 16
-                enabled: audioSource.toString() !== ""
-                opacity: enabled ? 1.0 : 0.4
-                onClicked: {
-                    audioErrorLabel.visible = false;
-                    translationView.wantsToPlay = true;
-                    if (mediaPlayer.source == audioSource) {
-                        mediaPlayer.stop();
-                        mediaPlayer.play();
-                        translationView.wantsToPlay = false;
-                    } else {
-                        mediaPlayer.source = audioSource;
-                    }
-                }
-            }
-
-            Label {
-                id: audioErrorLabel
-                visible: false
-                color: "#e74c3c"
-                font.pixelSize: 12
-            }
         }
 
         // English Definition
