@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cd build-*-Release 2>/dev/null && cmake --build . --target tests 2>&1 | tail -5 || echo 'Build dir not found - check configuration'"
+          }
+        ]
+      }
+    ]
+  }
+}
