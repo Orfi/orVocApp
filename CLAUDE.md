@@ -27,6 +27,18 @@ cd build && ctest --output-on-failure
 
 **Requirements:** CMake 3.16+, Qt 6.8+ (project uses Qt 6.10.2), Ninja generator.
 
+## Build Configuration
+
+Always check the project's existing build directory configuration (e.g., Qt Creator shadow build paths) before running any build commands. Never assume a default build directory — read CMakeLists.txt, .pro files, or IDE config files first. Common pattern: `build-<project>-Desktop-Release/` or `build-<project>-Desktop-Debug/`.
+
+## Qt/QML Development Rules
+
+- Always use Qt 6 APIs and patterns (not Qt 5)
+- ScrollView does NOT support multiple children — use Flickable instead
+- When modifying splash screen or window initialization code, test the FULL startup sequence (splash → main window) after each change
+- Never break showMaximized or existing window behavior when refactoring signal/slot connections
+- For .deb packaging: always verify bundled Qt/QML plugins, shared libraries, SSL, and FileDialog dependencies
+
 ## Architecture
 
 - **`orVocab/`** — Application source directory containing CMakeLists.txt, C++ sources, and QML files
@@ -58,3 +70,18 @@ cd build && ctest --output-on-failure
 - 4-space indentation for both C++ and QML
 - CMake `qt_add_qml_module()` manages QML file registration — add new QML files to the `QML_FILES` list in CMakeLists.txt
 - New C++ classes exposed to QML should be added as sources to the `qt_add_executable` call
+
+## Problem Solving Approach
+
+When fixing bugs, start with the SIMPLEST possible solution first. Do not over-engineer or explore complex approaches (pause/resume queues, priority systems, architectural reworks) before trying the obvious fix. If the user suggests a simpler approach, immediately adopt it.
+
+## Scripts and Automation
+
+When creating scripts or automation tools, always make them dynamic and project-agnostic. Never hardcode project names, paths, or framework-specific logic (e.g., CMake-only) unless explicitly told to. Derive project names from directory names, executable names, or config files.
+
+## Interaction Preferences
+
+- When asked for feedback on writing/docs, provide ONLY the type of feedback requested (e.g., formatting only, not content changes)
+- When user asks for a reusable prompt, provide a PROMPT — not a git command or code
+- Do not offer to save things to memory/files unless asked
+- Check if resources exist (e.g., GitHub releases) before asking the user which version to use
