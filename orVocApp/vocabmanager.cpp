@@ -1,4 +1,4 @@
-// orVocab/vocabmanager.cpp
+// orVocApp/vocabmanager.cpp
 #include "vocabmanager.h"
 #include "pdfexporter.h"
 #include <algorithm>

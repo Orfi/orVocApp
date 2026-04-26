@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="orVocab/icon_128.png" alt="orVocApp Logo" width="128" height="128">
+  <img src="orVocApp/icon_128.png" alt="orVocApp Logo" width="128" height="128">
 </p>
 
 <h1 align="center">orVocApp</h1>
@@ -68,8 +68,8 @@ cmake --build build --config Release
 ### Run
 
 ```bash
-./build/orVocab/orVocApp        # Linux
-build\orVocab\Release\orVocApp  # Windows
+./build/orVocApp/orVocApp        # Linux
+build\orVocApp\Release\orVocApp  # Windows
 ```
 
 ## Testing
@@ -108,7 +108,7 @@ Requires [NSIS](https://nsis.sourceforge.io/) installed.
 ## Architecture
 
 ```
-orVocab/
+orVocApp/
   main.cpp              # Entry point, singleton registration, splash screen
   vocabmanager.h/cpp    # Word bank CRUD, JSON persistence, import/export
   networkclient.h/cpp   # REST API calls, response parsing

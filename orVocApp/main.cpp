@@ -1,4 +1,4 @@
-// orVocab/main.cpp
+// orVocApp/main.cpp
 #include <QApplication>
 #include <QElapsedTimer>
 #include <QIcon>
@@ -11,25 +11,25 @@
 int main(int argc, char *argv[])
 {
     QApplication app(argc, argv);
-    app.setOrganizationName("orVocab");
+    app.setOrganizationName("orVocApp");
     app.setApplicationName("orVocApp");
     QIcon appIcon;
-    for (const auto &res : {":/qt/qml/orVocab/icon_16.png",
-                            ":/qt/qml/orVocab/icon_32.png",
-                            ":/qt/qml/orVocab/icon_48.png",
-                            ":/qt/qml/orVocab/icon_64.png",
-                            ":/qt/qml/orVocab/icon_128.png",
-                            ":/qt/qml/orVocab/icon_256.png"})
+    for (const auto &res : {":/qt/qml/orvocapp/icon_16.png",
+                            ":/qt/qml/orvocapp/icon_32.png",
+                            ":/qt/qml/orvocapp/icon_48.png",
+                            ":/qt/qml/orvocapp/icon_64.png",
+                            ":/qt/qml/orvocapp/icon_128.png",
+                            ":/qt/qml/orvocapp/icon_256.png"})
         appIcon.addFile(res);
     app.setWindowIcon(appIcon);
-    app.setDesktopFileName("orVocab");
+    app.setDesktopFileName("orVocApp");
 
     VocabManager vocabManager;
     vocabManager.loadFromJson();
 
     NetworkClient networkClient;
 
-    QPixmap splashPix(":/qt/qml/orVocab/splash.png");
+    QPixmap splashPix(":/qt/qml/orvocapp/splash.png");
     splashPix = splashPix.scaled(splashPix.size() * 0.2, Qt::KeepAspectRatio, Qt::SmoothTransformation);
     QSplashScreen splash(splashPix);
     splash.setWindowOpacity(0.6);
@@ -43,8 +43,8 @@ int main(int argc, char *argv[])
 
     QQmlApplicationEngine engine;
 
-    qmlRegisterSingletonInstance("orVocab", 1, 0, "VocabManager", &vocabManager);
-    qmlRegisterSingletonInstance("orVocab", 1, 0, "NetworkClient", &networkClient);
+    qmlRegisterSingletonInstance("orvocapp", 1, 0, "VocabManager", &vocabManager);
+    qmlRegisterSingletonInstance("orvocapp", 1, 0, "NetworkClient", &networkClient);
 
     QObject::connect(
         &engine,
@@ -53,7 +53,7 @@ int main(int argc, char *argv[])
         []() { QCoreApplication::exit(-1); },
         Qt::QueuedConnection);
 
-    engine.loadFromModule("orVocab", "Main");
+    engine.loadFromModule("orvocapp", "Main");
     splash.close();
 
     return app.exec();

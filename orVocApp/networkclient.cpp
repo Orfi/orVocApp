@@ -1,4 +1,4 @@
-// orVocab/networkclient.cpp
+// orVocApp/networkclient.cpp
 #include "networkclient.h"
 #include <QJsonArray>
 #include <QJsonDocument>

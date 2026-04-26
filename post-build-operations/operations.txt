@@ -6,7 +6,7 @@ Or use the build-package script which configures, builds, tests, and generates t
 ./build-package.sh
 
 Run the app:
-./build/orVocab/orVocApp
+./build/orVocApp/orVocApp
 
 Generate .deb only (if already built):
 cd build && cpack -G DEB && cd ..

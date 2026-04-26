@@ -15,7 +15,7 @@ qt_add_executable(orVocApp
 )
 
 qt_add_qml_module(orVocApp
-    URI orVocab
+    URI orvocapp
     QML_FILES
         Main.qml
         Sidebar.qml

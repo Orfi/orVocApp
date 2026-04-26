@@ -1,4 +1,4 @@
-// orVocab/vocabmanager.h
+// orVocApp/vocabmanager.h
 #ifndef VOCABMANAGER_H
 #define VOCABMANAGER_H
 

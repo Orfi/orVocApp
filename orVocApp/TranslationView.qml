@@ -1,4 +1,4 @@
-// orVocab/TranslationView.qml
+// orVocApp/TranslationView.qml
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts

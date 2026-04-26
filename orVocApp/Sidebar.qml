@@ -1,4 +1,4 @@
-// orVocab/Sidebar.qml
+// orVocApp/Sidebar.qml
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts

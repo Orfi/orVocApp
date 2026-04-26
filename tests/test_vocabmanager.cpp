@@ -16,7 +16,7 @@ static char *argv[] = {appName, nullptr};
 
 TEST_CASE("VocabManager add and remove words", "[vocabmanager]") {
     QCoreApplication app(argc, argv);
-    app.setApplicationName("orVocab-test");
+    app.setApplicationName("orVocApp-test");
 
     VocabManager vm;
 
@@ -72,7 +72,7 @@ TEST_CASE("VocabManager add and remove words", "[vocabmanager]") {
 
 TEST_CASE("VocabManager filter words", "[vocabmanager]") {
     QCoreApplication app(argc, argv);
-    app.setApplicationName("orVocab-test");
+    app.setApplicationName("orVocApp-test");
 
     VocabManager vm;
     vm.addWord("algorithm");
@@ -115,7 +115,7 @@ TEST_CASE("VocabManager filter words", "[vocabmanager]") {
 
 TEST_CASE("VocabManager JSON persistence", "[vocabmanager][json]") {
     QCoreApplication app(argc, argv);
-    app.setApplicationName("orVocab-test");
+    app.setApplicationName("orVocApp-test");
 
     // Use test-specific data location to avoid polluting real data
     QStandardPaths::setTestModeEnabled(true);
@@ -198,7 +198,7 @@ TEST_CASE("VocabManager JSON persistence", "[vocabmanager][json]") {
 
 TEST_CASE("VocabManager export and import", "[vocabmanager][io]") {
     QCoreApplication app(argc, argv);
-    app.setApplicationName("orVocab-test");
+    app.setApplicationName("orVocApp-test");
 
     QStandardPaths::setTestModeEnabled(true);
     QString dataDir = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);

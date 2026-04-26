@@ -1,21 +1,21 @@
 find_package(Qt6 REQUIRED COMPONENTS Core Network Gui Widgets PrintSupport)
 find_package(Catch2 3 REQUIRED)
 
-add_executable(orVocabTests
+add_executable(orVocAppTests
     test_vocabmanager.cpp
     test_networkclient.cpp
     test_pdfexporter.cpp
-    ${CMAKE_SOURCE_DIR}/orVocab/vocabmanager.cpp
-    ${CMAKE_SOURCE_DIR}/orVocab/networkclient.cpp
-    ${CMAKE_SOURCE_DIR}/orVocab/baseexporter.cpp
-    ${CMAKE_SOURCE_DIR}/orVocab/pdfexporter.cpp
+    ${CMAKE_SOURCE_DIR}/orVocApp/vocabmanager.cpp
+    ${CMAKE_SOURCE_DIR}/orVocApp/networkclient.cpp
+    ${CMAKE_SOURCE_DIR}/orVocApp/baseexporter.cpp
+    ${CMAKE_SOURCE_DIR}/orVocApp/pdfexporter.cpp
 )
 
-set_target_properties(orVocabTests PROPERTIES AUTOMOC ON)
+set_target_properties(orVocAppTests PROPERTIES AUTOMOC ON)
 
-target_include_directories(orVocabTests PRIVATE ${CMAKE_SOURCE_DIR}/orVocab)
+target_include_directories(orVocAppTests PRIVATE ${CMAKE_SOURCE_DIR}/orVocApp)
 
-target_link_libraries(orVocabTests
+target_link_libraries(orVocAppTests
     PRIVATE
         Catch2::Catch2WithMain
         Qt6::Core
@@ -27,4 +27,4 @@ target_link_libraries(orVocabTests
 
 include(CTest)
 include(Catch)
-catch_discover_tests(orVocabTests)
+catch_discover_tests(orVocAppTests)

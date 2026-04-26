@@ -4,12 +4,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-orVocab is a lightweight Qt 6 Quick (QML) desktop vocabulary builder. Users curate a personal word bank with English definitions (via dictionaryapi.dev), Arabic translations (via Google Translate GTX API), and audio pronunciations (QtMultimedia). Data persists to a local `vocab.json` file. Targets Windows 10/11 and Linux.
+orVocApp is a lightweight Qt 6 Quick (QML) desktop vocabulary builder. Users curate a personal word bank with English definitions (via dictionaryapi.dev), Arabic translations (via Google Translate GTX API), and audio pronunciations (QtMultimedia). Data persists to a local `vocab.json` file. Targets Windows 10/11 and Linux.
 
 ## Build Commands
 
 ```bash
-# Configure (from orVocab/ subdirectory)
+# Configure (from orVocApp/ subdirectory)
 cmake -B build -DCMAKE_BUILD_TYPE=Debug -G Ninja
 
 # Build
@@ -19,7 +19,7 @@ cmake --build build
 cmake --build build --target clean
 
 # Run
-./build/apporVocab
+./build/apporVocApp
 
 # Run tests (once Catch2 tests exist)
 cd build && ctest --output-on-failure
@@ -41,12 +41,12 @@ Always check the project's existing build directory configuration (e.g., Qt Crea
 
 ## Architecture
 
-- **`orVocab/`** — Application source directory containing CMakeLists.txt, C++ sources, and QML files
+- **`orVocApp/`** — Application source directory containing CMakeLists.txt, C++ sources, and QML files
 - **`design/`** — Design artifacts: PRD (`prd.md`), Architecture Decision Records (`ADR.md`), wireframe mockup (`gui.png`), and planned directory structure (`recommended_directory_structure.md`)
-- **Entry point:** `main.cpp` creates `QGuiApplication` + `QQmlApplicationEngine`, loads the `orVocab` QML module
+- **Entry point:** `main.cpp` creates `QGuiApplication` + `QQmlApplicationEngine`, loads the `orVocApp` QML module
 - **UI:** `Main.qml` is the root QML component loaded by the engine
-- **Build target:** `apporVocab` (executable), defined via `qt_add_executable` + `qt_add_qml_module`
-- **QML module URI:** `orVocab`
+- **Build target:** `apporVocApp` (executable), defined via `qt_add_executable` + `qt_add_qml_module`
+- **QML module URI:** `orVocApp`
 
 ### Planned Components (per design docs)
 
