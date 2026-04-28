@@ -1,4 +1,4 @@
-find_package(Qt6 REQUIRED COMPONENTS Quick Network Multimedia QuickDialogs2 Widgets PrintSupport)
+find_package(Qt6 REQUIRED COMPONENTS Quick QuickControls2 Network Multimedia QuickDialogs2 Widgets PrintSupport)
 
 qt_standard_project_setup(REQUIRES 6.8)
 
@@ -13,6 +13,11 @@ qt_add_executable(orVocApp
     pdfexporter.h
     pdfexporter.cpp
 )
+
+# Windows: embed icon + version info into the exe (A)
+if(WIN32)
+    target_sources(orVocApp PRIVATE orVocApp.rc)
+endif()
 
 qt_add_qml_module(orVocApp
     URI orvocapp
@@ -44,6 +49,7 @@ set_target_properties(orVocApp PROPERTIES
 target_link_libraries(orVocApp
     PRIVATE
         Qt6::Quick
+        Qt6::QuickControls2
         Qt6::Network
         Qt6::Multimedia
         Qt6::QuickDialogs2
@@ -52,6 +58,22 @@ target_link_libraries(orVocApp
 )
 
 include(GNUInstallDirs)
+
+# Resolve Qt install dirs — shared by both OS branches below
+get_target_property(_qt_core_loc Qt6::Core LOCATION)
+get_filename_component(QT_LIB_DIR "${_qt_core_loc}" DIRECTORY)
+get_filename_component(QT_ROOT_DIR "${QT_LIB_DIR}" DIRECTORY)
+set(QT_PLUGIN_DIR "${QT_ROOT_DIR}/plugins")
+
+# ============================================================
+# Linux install layout (.deb via CPack DEB generator)
+#   exe       -> /usr/lib/orvocapp/orVocApp
+#   launcher  -> /usr/bin/orvocapp (wrapper sh, sets LD_LIBRARY_PATH)
+#   Qt libs   -> /usr/lib/orvocapp/ (bundled manually)
+#   plugins   -> /usr/lib/orvocapp/plugins/
+#   QML       -> /usr/lib/orvocapp/qml/
+# ============================================================
+if(UNIX AND NOT APPLE)
 
 # Real binary -> /usr/lib/orvocapp/orVocApp (alongside bundled Qt libs)
 install(TARGETS orVocApp RUNTIME DESTINATION ${CMAKE_INSTALL_LIBDIR}/orvocapp)
@@ -73,11 +95,6 @@ install(FILES icon_128.png DESTINATION ${CMAKE_INSTALL_DATADIR}/icons/hicolor/12
 install(FILES icon_256.png DESTINATION ${CMAKE_INSTALL_DATADIR}/icons/hicolor/256x256/apps RENAME orvocapp.png)
 
 # ===== Bundle Qt runtime libraries =====
-get_target_property(_qt_core_loc Qt6::Core LOCATION)
-get_filename_component(QT_LIB_DIR "${_qt_core_loc}" DIRECTORY)
-get_filename_component(QT_ROOT_DIR "${QT_LIB_DIR}" DIRECTORY)
-set(QT_PLUGIN_DIR "${QT_ROOT_DIR}/plugins")
-
 # Glob all Qt6 and ICU shared libs — avoids missing transitive deps
 file(GLOB QT_BUNDLED_LIBS
     "${QT_LIB_DIR}/libQt6*.so.6"
@@ -176,3 +193,48 @@ foreach(_mod ${QT_QML_MODULES})
                 FILES_MATCHING PATTERN "*.so" PATTERN "*.qml" PATTERN "qmldir" PATTERN "*.qmltypes")
     endif()
 endforeach()
+
+endif() # UNIX AND NOT APPLE
+
+# ============================================================
+# Windows install layout (NSIS installer via CPack)
+#   exe       -> <INSTDIR>\bin\orVocApp.exe
+#   Qt libs   -> <INSTDIR>\bin\ (deployed by windeployqt at install time)
+#   plugins   -> <INSTDIR>\bin\platforms\ etc. (windeployqt)
+#   QML       -> <INSTDIR>\bin\ (windeployqt with --qmldir)
+# The NSIS shortcut in the root CMakeLists.txt points at $INSTDIR\bin\orVocApp.exe
+# ============================================================
+if(WIN32)
+
+# Main exe to bin/
+install(TARGETS orVocApp RUNTIME DESTINATION bin)
+
+# Install the app icon alongside the exe so the NSIS Start Menu shortcut
+# can reference it explicitly (independent of the exe's embedded resource) (B)
+install(FILES icon.ico DESTINATION bin)
+
+# Locate windeployqt — lives next to qmake in the Qt install
+find_program(WINDEPLOYQT_EXECUTABLE windeployqt
+    HINTS "${QT_ROOT_DIR}/bin"
+    REQUIRED)
+
+# Run windeployqt against the installed exe to populate bin/ with
+# the exact set of Qt DLLs, plugins, and QML modules it actually needs.
+install(CODE "
+    message(STATUS \"Running windeployqt on orVocApp.exe\")
+    execute_process(
+        COMMAND \"${WINDEPLOYQT_EXECUTABLE}\"
+            --release
+            --no-translations
+            --no-opengl-sw
+            --no-system-d3d-compiler
+            --qmldir \"${CMAKE_CURRENT_SOURCE_DIR}\"
+            \"\${CMAKE_INSTALL_PREFIX}/bin/orVocApp.exe\"
+        RESULT_VARIABLE _wdq_result
+    )
+    if(NOT _wdq_result EQUAL 0)
+        message(FATAL_ERROR \"windeployqt failed with exit code \${_wdq_result}\")
+    endif()
+")
+
+endif() # WIN32

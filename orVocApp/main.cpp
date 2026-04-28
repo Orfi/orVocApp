@@ -4,6 +4,7 @@
 #include <QIcon>
 #include <QPixmap>
 #include <QQmlApplicationEngine>
+#include <QQuickStyle>
 #include <QSplashScreen>
 #include "vocabmanager.h"
 #include "networkclient.h"
@@ -11,6 +12,7 @@
 int main(int argc, char *argv[])
 {
     QApplication app(argc, argv);
+    QQuickStyle::setStyle("Fusion");
     app.setOrganizationName("orVocApp");
     app.setApplicationName("orVocApp");
     QIcon appIcon;

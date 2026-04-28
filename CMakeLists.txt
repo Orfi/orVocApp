@@ -31,7 +31,7 @@ set(CPACK_NSIS_MODIFY_PATH OFF)
 set(CPACK_NSIS_ENABLE_UNINSTALL_BEFORE_INSTALL ON)
 set(CPACK_NSIS_MUI_ICON "${CMAKE_SOURCE_DIR}/orVocApp/icon.ico")
 set(CPACK_NSIS_CREATE_ICONS_EXTRA
-    "CreateShortCut '$SMPROGRAMS\\\\orVocApp\\\\orVocApp.lnk' '$INSTDIR\\\\bin\\\\orVocApp.exe'")
+    "CreateShortCut '$SMPROGRAMS\\\\orVocApp\\\\orVocApp.lnk' '$INSTDIR\\\\bin\\\\orVocApp.exe' '' '$INSTDIR\\\\bin\\\\icon.ico' 0")
 set(CPACK_NSIS_DELETE_ICONS_EXTRA
     "Delete '$SMPROGRAMS\\\\orVocApp\\\\orVocApp.lnk'")
 

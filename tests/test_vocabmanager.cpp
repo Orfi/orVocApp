@@ -235,6 +235,9 @@ TEST_CASE("VocabManager export and import", "[vocabmanager][io]") {
         QFile file(exportPath);
         REQUIRE(file.open(QIODevice::ReadOnly));
         QString content = QString::fromUtf8(file.readAll());
+        // exportText opens with QIODevice::Text, so line endings are native:
+        // \n on Linux, \r\n on Windows. Normalize before comparing.
+        content.replace("\r\n", "\n");
         REQUIRE(content == "apple\ncherry\n");
     }
 
