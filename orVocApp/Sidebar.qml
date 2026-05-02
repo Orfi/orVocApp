@@ -94,6 +94,7 @@ Rectangle {
                 Layout.fillWidth: true
                 placeholderText: "Search or add word..."
                 enabled: !sidebar.validating
+                focus: true
                 onTextChanged: VocabManager.filterWords(text)
                 onAccepted: sidebar.attemptAdd()
             }
