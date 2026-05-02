@@ -2,7 +2,10 @@
 set -e
 
 QT_PREFIX="${QT_PREFIX_PATH:-$HOME/Qt/6.10.2/gcc_64}"
-BUILD_DIR="${BUILD_DIR:-build}"
+# Derive the Qt version from QT_PREFIX so the shadow-build path stays aligned
+# with the Qt Creator convention (build/Desktop_Qt_<ver>-Release).
+QT_VER=$(basename "$(dirname "$QT_PREFIX")" | tr '.' '_')
+BUILD_DIR="${BUILD_DIR:-build/Desktop_Qt_${QT_VER}-Release}"
 
 echo "=== Configuring ==="
 cmake -B "$BUILD_DIR" -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="$QT_PREFIX"
