@@ -10,29 +10,85 @@ class QNetworkAccessManager;
 class QNetworkReply;
 class QThread;
 
+/**
+ * @brief One word's fetched dictionary and translation data, ready for rendering.
+ *
+ * Populated incrementally by BaseExporter during the fetch phase. An entry is
+ * considered renderable only when @ref valid is true, which requires both a
+ * successful dictionary response and a successful translation response.
+ */
 struct WordEntry {
-    QString word;
-    QString phonetic;
-    QString definitionHtml;
-    QString translationHtml;
-    bool valid = false;
+    QString word;              ///< The source word being exported.
+    QString phonetic;          ///< Phonetic transcription (e.g. "/həˈloʊ/"), empty if none.
+    QString definitionHtml;    ///< HTML-formatted English definitions from the dictionary API.
+    QString translationHtml;   ///< HTML-formatted RTL-wrapped Arabic translation.
+    bool valid = false;        ///< True iff both dictionary and translation fetches succeeded.
 };
 
+/**
+ * @brief Abstract base class for exporters that need dictionary + translation data per word.
+ *
+ * Runs a two-phase pipeline:
+ *  1. Fetch phase — sequentially fetches the dictionary entry and Arabic translation
+ *     for each input word via QNetworkAccessManager, throttled by 150 ms between words.
+ *  2. Render phase — spawns a QThread that calls the subclass-provided
+ *     @ref renderToFile implementation with the successfully-fetched entries.
+ *
+ * Subclasses implement @ref renderToFile to produce a format-specific output file
+ * (e.g. PDF). Progress is reported via @ref progress; completion via @ref finished.
+ */
 class BaseExporter : public QObject
 {
     Q_OBJECT
 
 public:
+    /**
+     * @brief Constructs a BaseExporter for the given list of source words.
+     * @param words The source words to fetch and export.
+     * @param parent Optional QObject parent for lifetime management.
+     */
     explicit BaseExporter(const QStringList &words, QObject *parent = nullptr);
+
+    /// @brief Destroys the exporter and releases the internal QNetworkAccessManager.
     ~BaseExporter() override;
 
+    /**
+     * @brief Kicks off the fetch + render pipeline, writing the result to @p outputPath.
+     * @param outputPath Absolute path to the target output file.
+     *
+     * Emits @ref progress repeatedly during the fetch phase and @ref finished once
+     * the render phase completes (successfully or otherwise).
+     */
     Q_INVOKABLE void exportToFile(const QString &outputPath);
 
 signals:
+    /**
+     * @brief Emitted after each word's fetch phase finishes (regardless of success).
+     * @param current Number of words processed so far (1-based).
+     * @param total Total number of words in the input list.
+     */
     void progress(int current, int total);
+
+    /**
+     * @brief Emitted once the render phase has completed.
+     * @param success True if the subclass's renderToFile returned true and a valid
+     *                output was produced; false on render error or if no fetched
+     *                entries were valid.
+     * @param filePath The absolute path that was written to (same as the argument
+     *                 passed to @ref exportToFile).
+     */
     void finished(bool success, const QString &filePath);
 
 protected:
+    /**
+     * @brief Subclass hook — render the successfully-fetched entries to @p outputPath.
+     * @param entries The subset of WordEntry objects whose fetches succeeded.
+     * @param outputPath Absolute path to the target output file.
+     * @return True on successful render, false on any failure.
+     *
+     * Called on a worker QThread; implementations must not touch UI or objects
+     * owned by the main thread.
+     */
     virtual bool renderToFile(const QVector<WordEntry> &entries, const QString &outputPath) = 0;
 
 private:
