@@ -62,8 +62,25 @@ public:
      * the render phase completes (successfully or otherwise).
      */
     Q_INVOKABLE void exportToFile(const QString &outputPath);
+
+    /**
+     * @brief Requests cancellation of the in-progress export.
+     *
+     * Sets the atomic cancel flag and aborts the currently outstanding
+     * QNetworkReply (if any). Fetch-phase callbacks and the render loop
+     * observe the flag at their next checkpoint and emit @ref cancelled
+     * instead of @ref finished. Safe to call after the pipeline has
+     * already completed (no-op in that case). Thread-safe.
+     */
     Q_INVOKABLE void requestCancel();
 
+    /**
+     * @brief Returns whether cancellation has been requested.
+     * @return True once @ref requestCancel has been called on this exporter.
+     *
+     * Safe to call from the render worker thread — reads the atomic flag
+     * with acquire ordering.
+     */
     bool isCancelled() const { return m_cancelled.load(std::memory_order_acquire); }
 
 signals:
@@ -83,6 +100,14 @@ signals:
      *                 passed to @ref exportToFile).
      */
     void finished(bool success, const QString &filePath);
+
+    /**
+     * @brief Emitted when a user-requested cancellation has taken effect.
+     *
+     * Fires instead of @ref finished when @ref requestCancel is observed
+     * by the fetch loop or the render worker. Any partial output file is
+     * removed before this signal is emitted.
+     */
     void cancelled();
 
 protected:
