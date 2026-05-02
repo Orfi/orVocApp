@@ -8,18 +8,22 @@
 
 class QNetworkAccessManager;
 
-/// @brief Parsed result from the dictionary API response.
+/**
+ * @brief Parsed result from the dictionary API response.
+ */
 struct DictionaryResult {
-    QString html;      ///< HTML-formatted definitions with part-of-speech and examples.
-    QString phonetic;  ///< Phonetic transcription (e.g. "/həˈloʊ/").
-    QUrl audioUrl;     ///< URL to the pronunciation audio file, empty if unavailable.
-    bool error = false;///< True if the response could not be parsed.
+    QString html;       ///< HTML-formatted definitions with part-of-speech and examples.
+    QString phonetic;   ///< Phonetic transcription (e.g. "/həˈloʊ/").
+    QUrl audioUrl;      ///< URL to the pronunciation audio file, empty if unavailable.
+    bool error = false; ///< True if the response could not be parsed.
 };
 
-/// @brief Parsed result from the Google Translate GTX API response.
+/**
+ * @brief Parsed result from the Google Translate GTX API response.
+ */
 struct TranslationResult {
-    QString html;      ///< HTML-formatted Arabic translation with RTL direction.
-    bool error = false;///< True if the response could not be parsed.
+    QString html;       ///< HTML-formatted Arabic translation with RTL direction.
+    bool error = false; ///< True if the response could not be parsed.
 };
 
 /**
@@ -27,7 +31,7 @@ struct TranslationResult {
  *
  * Uses QNetworkAccessManager for async HTTP requests. Emits signals with
  * parsed results for definition HTML, phonetic text, audio URL, and
- * Arabic translation. Exposed to QML as a singleton.
+ * Arabic translation. Exposed to QML as a singleton under URI "orvocapp".
  */
 class NetworkClient : public QObject
 {
@@ -36,15 +40,19 @@ class NetworkClient : public QObject
     QML_SINGLETON
 
 public:
-    /// @brief Constructs the NetworkClient with an internal QNetworkAccessManager.
+    /**
+     * @brief Constructs the NetworkClient with an internal QNetworkAccessManager.
+     * @param parent Optional QObject parent for lifetime management.
+     */
     explicit NetworkClient(QObject *parent = nullptr);
 
     /**
      * @brief Fetches the English definition from dictionaryapi.dev.
      * @param word The word to look up.
      *
-     * On success emits definitionReady(), phoneticReady(), and audioUrlReady().
-     * On failure emits requestFailed() with area "definition".
+     * On success emits @ref definitionReady, @ref phoneticReady, and
+     * @ref audioUrlReady. On failure emits @ref requestFailed with area
+     * "definition".
      */
     Q_INVOKABLE void fetchDefinition(const QString &word);
 
@@ -52,36 +60,48 @@ public:
      * @brief Fetches the Arabic translation from Google Translate GTX API.
      * @param word The English word to translate.
      *
-     * On success emits translationReady().
-     * On failure emits requestFailed() with area "translation".
+     * On success emits @ref translationReady. On failure emits
+     * @ref requestFailed with area "translation".
      */
     Q_INVOKABLE void fetchTranslation(const QString &word);
 
     /**
      * @brief Parses a raw dictionary API JSON response.
      * @param data The raw JSON bytes from dictionaryapi.dev.
-     * @return DictionaryResult with HTML, phonetic, and audio URL.
+     * @return DictionaryResult with HTML, phonetic, and audio URL; error=true on parse failure.
      */
     static DictionaryResult parseDictionaryResponse(const QByteArray &data);
 
     /**
      * @brief Parses a raw Google Translate GTX JSON response.
      * @param data The raw JSON bytes from the GTX API.
-     * @return TranslationResult with RTL-wrapped Arabic HTML.
+     * @return TranslationResult with RTL-wrapped Arabic HTML; error=true on parse failure.
      */
     static TranslationResult parseTranslationResponse(const QByteArray &data);
 
 signals:
-    /// @brief Emitted with formatted HTML when a definition is successfully fetched.
+    /**
+     * @brief Emitted with formatted HTML when a definition is successfully fetched.
+     * @param html HTML-formatted definitions with part-of-speech and examples.
+     */
     void definitionReady(const QString &html);
 
-    /// @brief Emitted with the phonetic transcription string.
+    /**
+     * @brief Emitted with the phonetic transcription string.
+     * @param phonetic Phonetic string (e.g. "/həˈloʊ/").
+     */
     void phoneticReady(const QString &phonetic);
 
-    /// @brief Emitted with the pronunciation audio URL.
+    /**
+     * @brief Emitted with the pronunciation audio URL.
+     * @param url HTTPS URL to an .mp3 pronunciation file.
+     */
     void audioUrlReady(const QUrl &url);
 
-    /// @brief Emitted with RTL-formatted HTML when a translation is successfully fetched.
+    /**
+     * @brief Emitted with RTL-formatted HTML when a translation is successfully fetched.
+     * @param html RTL-wrapped Arabic HTML.
+     */
     void translationReady(const QString &html);
 
     /**
