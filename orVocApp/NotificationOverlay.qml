@@ -12,6 +12,8 @@ Item {
     property int total: 0
     property bool exporting: false
     property var activeExporter: null
+    property int buttonSize: 32
+    property int indicatorSize: 14
 
     function startExport(wordCount) {
         current = 0;
@@ -74,28 +76,31 @@ Item {
 
         Button {
             id: cancelButton
-            implicitWidth: height
-            implicitHeight: 24
+            implicitWidth: overlay.buttonSize
+            implicitHeight: overlay.buttonSize
             padding: 0
             hoverEnabled: true
             ToolTip.visible: hovered
             ToolTip.delay: 500
             ToolTip.text: "Cancel export"
 
-            background: Rectangle {
-                radius: width / 2
-                color: cancelButton.enabled
-                       ? (cancelButton.down
-                          ? Qt.darker("#e74c3c", 1.2)
-                          : (cancelButton.hovered
-                             ? Qt.lighter("#e74c3c", 1.15)
-                             : "#e74c3c"))
-                       : Qt.darker("#e74c3c", 1.6)
-                border.color: Qt.darker("#e74c3c", 1.4)
-                border.width: 1
-            }
+            background: Rectangle { color: "transparent" }
 
-            contentItem: Item {}
+            contentItem: Item {
+                Rectangle {
+                    anchors.centerIn: parent
+                    width: overlay.indicatorSize
+                    height: overlay.indicatorSize
+                    radius: width / 2
+                    color: cancelButton.enabled
+                           ? (cancelButton.down
+                              ? Qt.darker("#e74c3c", 1.2)
+                              : (cancelButton.hovered
+                                 ? Qt.lighter("#e74c3c", 1.15)
+                                 : "#e74c3c"))
+                           : Qt.darker("#e74c3c", 1.6)
+                }
+            }
 
             onClicked: {
                 cancelButton.enabled = false;

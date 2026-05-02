@@ -48,10 +48,13 @@ ApplicationWindow {
 
             NotificationOverlay {
                 id: notificationOverlay
+                buttonSize: pronunciationButton.implicitHeight
+                indicatorSize: pronunciationButton.indicatorSize
             }
 
             Button {
                 id: pronunciationButton
+                readonly property int indicatorSize: glyph.font.pixelSize
                 implicitWidth: exportButton.implicitHeight
                 implicitHeight: exportButton.implicitHeight
                 padding: 0
@@ -74,6 +77,7 @@ ApplicationWindow {
                 }
 
                 contentItem: Label {
+                    id: glyph
                     text: "▶"
                     color: palette.buttonText
                     horizontalAlignment: Text.AlignHCenter
