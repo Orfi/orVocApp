@@ -1,6 +1,7 @@
 #include "pdfexporter.h"
 
 #include <QDate>
+#include <QFile>
 #include <QFont>
 #include <QMargins>
 #include <QPainter>
@@ -53,14 +54,21 @@ bool PdfExporter::renderToFile(const QVector<WordEntry> &entries, const QString 
     }
 
     int pageNumber = 1;
+    bool cancelledMidRender = false;
 
-    for (auto it = letterGroups.constBegin(); it != letterGroups.constEnd(); ++it) {
+    for (auto it = letterGroups.constBegin(); it != letterGroups.constEnd() && !cancelledMidRender; ++it) {
         QChar letter = it.key();
         int letterIndex = letter.unicode() - QChar('A').unicode();
         const auto &words = it.value();
 
         printer.newPage();
         pageNumber++;
+
+        if (isCancelled()) {
+            cancelledMidRender = true;
+            break;
+        }
+
         drawPageHeader(painter, letter, letterIndex, pageRect);
         drawPageFooter(painter, pageNumber, pageRect);
 
@@ -74,6 +82,12 @@ bool PdfExporter::renderToFile(const QVector<WordEntry> &entries, const QString 
             if (yPos + entryHeight > contentBottom) {
                 printer.newPage();
                 pageNumber++;
+
+                if (isCancelled()) {
+                    cancelledMidRender = true;
+                    break;
+                }
+
                 drawPageHeader(painter, letter, letterIndex, pageRect);
                 drawPageFooter(painter, pageNumber, pageRect);
                 yPos = contentTop;
@@ -85,6 +99,12 @@ bool PdfExporter::renderToFile(const QVector<WordEntry> &entries, const QString 
     }
 
     painter.end();
+
+    if (cancelledMidRender || isCancelled()) {
+        QFile::remove(outputPath);
+        return false;
+    }
+
     return true;
 }
 

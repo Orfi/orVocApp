@@ -2,9 +2,11 @@
 #define BASEEXPORTER_H
 
 #include <QObject>
+#include <QPointer>
 #include <QString>
 #include <QUrl>
 #include <QVector>
+#include <atomic>
 
 class QNetworkAccessManager;
 class QNetworkReply;
@@ -60,6 +62,9 @@ public:
      * the render phase completes (successfully or otherwise).
      */
     Q_INVOKABLE void exportToFile(const QString &outputPath);
+    Q_INVOKABLE void requestCancel();
+
+    bool isCancelled() const { return m_cancelled.load(std::memory_order_acquire); }
 
 signals:
     /**
@@ -78,6 +83,7 @@ signals:
      *                 passed to @ref exportToFile).
      */
     void finished(bool success, const QString &filePath);
+    void cancelled();
 
 protected:
     /**
@@ -102,6 +108,8 @@ private:
     QNetworkAccessManager *m_nam = nullptr;
     QVector<WordEntry> m_entries;
     int m_currentIndex = 0;
+    std::atomic<bool> m_cancelled{false};
+    QPointer<QNetworkReply> m_currentReply;
 };
 
 #endif // BASEEXPORTER_H
