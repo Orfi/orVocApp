@@ -119,3 +119,30 @@ TEST_CASE("PdfExporter renderToFile handles multiple letter groups", "[pdfexport
     REQUIRE(QFile::exists(pdfPath));
     REQUIRE(QFile(pdfPath).size() > 0);
 }
+
+TEST_CASE("PdfExporter cancel before render returns false and leaves no file", "[pdfexporter][cancel]") {
+    QGuiApplication app(argc, argv);
+
+    QTemporaryDir tmpDir;
+    REQUIRE(tmpDir.isValid());
+    QString pdfPath = tmpDir.path() + "/cancelled.pdf";
+
+    QVector<WordEntry> entries;
+    for (char c = 'a'; c <= 'z'; ++c) {
+        WordEntry e;
+        e.word = QString(QChar::fromLatin1(c)) + "word";
+        e.phonetic = "/x/";
+        e.definitionHtml = "<p>def</p>";
+        e.translationHtml = "<p dir=\"rtl\">ترجمة</p>";
+        e.valid = true;
+        entries.append(e);
+    }
+
+    PdfExporter exporter(QStringList(), QPageSize::A4);
+    exporter.requestCancel();
+
+    bool result = exporter.renderToFile(entries, pdfPath);
+
+    REQUIRE(result == false);
+    REQUIRE_FALSE(QFile::exists(pdfPath));
+}

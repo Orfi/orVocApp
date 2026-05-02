@@ -48,10 +48,13 @@ ApplicationWindow {
 
             NotificationOverlay {
                 id: notificationOverlay
+                buttonSize: pronunciationButton.implicitHeight
+                indicatorSize: pronunciationButton.indicatorSize
             }
 
             Button {
                 id: pronunciationButton
+                readonly property int indicatorSize: glyph.font.pixelSize
                 implicitWidth: exportButton.implicitHeight
                 implicitHeight: exportButton.implicitHeight
                 padding: 0
@@ -74,6 +77,7 @@ ApplicationWindow {
                 }
 
                 contentItem: Label {
+                    id: glyph
                     text: "▶"
                     color: palette.buttonText
                     horizontalAlignment: Text.AlignHCenter
@@ -234,9 +238,13 @@ ApplicationWindow {
         onAccepted: {
             var exporter = VocabManager.createPdfExporter(root.selectedPageSize);
             notificationOverlay.startExport(VocabManager.words.length);
+            notificationOverlay.setActiveExporter(exporter);
             exporter.progress.connect(notificationOverlay.updateProgress);
             exporter.finished.connect(function(success, path) {
                 notificationOverlay.showResult(success);
+            });
+            exporter.cancelled.connect(function() {
+                notificationOverlay.showCancelled();
             });
             exporter.exportToFile(exportPdfDialog.file.toString().replace("file://", ""));
         }

@@ -31,8 +31,20 @@ void BaseExporter::exportToFile(const QString &outputPath)
     fetchNextWord();
 }
 
+void BaseExporter::requestCancel()
+{
+    m_cancelled.store(true, std::memory_order_release);
+    if (m_currentReply)
+        m_currentReply->abort();
+}
+
 void BaseExporter::fetchNextWord()
 {
+    if (m_cancelled.load(std::memory_order_acquire)) {
+        emit cancelled();
+        return;
+    }
+
     if (m_currentIndex >= m_words.size()) {
         startRender();
         return;
@@ -42,6 +54,7 @@ void BaseExporter::fetchNextWord()
 
     QUrl defUrl("https://api.dictionaryapi.dev/api/v2/entries/en/" + word);
     QNetworkReply *reply = m_nam->get(QNetworkRequest(defUrl));
+    m_currentReply = reply;
     connect(reply, &QNetworkReply::finished, this, [this, reply]() {
         reply->deleteLater();
         onDefinitionReply(m_currentIndex, reply);
@@ -50,6 +63,11 @@ void BaseExporter::fetchNextWord()
 
 void BaseExporter::onDefinitionReply(int index, QNetworkReply *defReply)
 {
+    if (m_cancelled.load(std::memory_order_acquire)) {
+        emit cancelled();
+        return;
+    }
+
     WordEntry &entry = m_entries[index];
 
     if (defReply->error() == QNetworkReply::NoError) {
@@ -68,6 +86,7 @@ void BaseExporter::onDefinitionReply(int index, QNetworkReply *defReply)
             transUrl.setQuery(query);
 
             QNetworkReply *transReply = m_nam->get(QNetworkRequest(transUrl));
+            m_currentReply = transReply;
             connect(transReply, &QNetworkReply::finished, this, [this, transReply]() {
                 transReply->deleteLater();
                 onTranslationReply(m_currentIndex, transReply);
@@ -83,6 +102,11 @@ void BaseExporter::onDefinitionReply(int index, QNetworkReply *defReply)
 
 void BaseExporter::onTranslationReply(int index, QNetworkReply *transReply)
 {
+    if (m_cancelled.load(std::memory_order_acquire)) {
+        emit cancelled();
+        return;
+    }
+
     WordEntry &entry = m_entries[index];
 
     if (transReply->error() == QNetworkReply::NoError) {
@@ -100,6 +124,11 @@ void BaseExporter::onTranslationReply(int index, QNetworkReply *transReply)
 
 void BaseExporter::startRender()
 {
+    if (m_cancelled.load(std::memory_order_acquire)) {
+        emit cancelled();
+        return;
+    }
+
     QVector<WordEntry> validEntries;
     for (const auto &e : m_entries) {
         if (e.valid)
@@ -113,7 +142,11 @@ void BaseExporter::startRender()
 
     QThread *thread = QThread::create([this, validEntries]() {
         bool success = renderToFile(validEntries, m_outputPath);
-        emit finished(success, m_outputPath);
+        if (m_cancelled.load(std::memory_order_acquire)) {
+            emit cancelled();
+        } else {
+            emit finished(success, m_outputPath);
+        }
     });
     connect(thread, &QThread::finished, thread, &QThread::deleteLater);
     thread->start();
