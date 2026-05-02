@@ -234,9 +234,13 @@ ApplicationWindow {
         onAccepted: {
             var exporter = VocabManager.createPdfExporter(root.selectedPageSize);
             notificationOverlay.startExport(VocabManager.words.length);
+            notificationOverlay.setActiveExporter(exporter);
             exporter.progress.connect(notificationOverlay.updateProgress);
             exporter.finished.connect(function(success, path) {
                 notificationOverlay.showResult(success);
+            });
+            exporter.cancelled.connect(function() {
+                notificationOverlay.showCancelled();
             });
             exporter.exportToFile(exportPdfDialog.file.toString().replace("file://", ""));
         }

@@ -11,6 +11,7 @@ Item {
     property int current: 0
     property int total: 0
     property bool exporting: false
+    property var activeExporter: null
 
     function startExport(wordCount) {
         current = 0;
@@ -18,6 +19,11 @@ Item {
         exporting = true;
         notificationLabel.opacity = 0;
         notificationLabel.text = "";
+        cancelButton.enabled = true;
+    }
+
+    function setActiveExporter(e) {
+        activeExporter = e;
     }
 
     function updateProgress(cur, tot) {
@@ -35,10 +41,17 @@ Item {
 
     function showResult(success) {
         exporting = false;
+        activeExporter = null;
         showNotification(
             success ? "PDF exported successfully" : "Export failed",
             !success
         );
+    }
+
+    function showCancelled() {
+        exporting = false;
+        activeExporter = null;
+        showNotification("Export cancelled", false);
     }
 
     RowLayout {
@@ -57,6 +70,38 @@ Item {
             from: 0
             to: overlay.total
             value: overlay.current
+        }
+
+        Button {
+            id: cancelButton
+            implicitWidth: height
+            implicitHeight: 24
+            padding: 0
+            hoverEnabled: true
+            ToolTip.visible: hovered
+            ToolTip.delay: 500
+            ToolTip.text: "Cancel export"
+
+            background: Rectangle {
+                radius: width / 2
+                color: cancelButton.enabled
+                       ? (cancelButton.down
+                          ? Qt.darker("#e74c3c", 1.2)
+                          : (cancelButton.hovered
+                             ? Qt.lighter("#e74c3c", 1.15)
+                             : "#e74c3c"))
+                       : Qt.darker("#e74c3c", 1.6)
+                border.color: Qt.darker("#e74c3c", 1.4)
+                border.width: 1
+            }
+
+            contentItem: Item {}
+
+            onClicked: {
+                cancelButton.enabled = false;
+                if (overlay.activeExporter)
+                    overlay.activeExporter.requestCancel();
+            }
         }
     }
 
