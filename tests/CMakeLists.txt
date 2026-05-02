@@ -1,4 +1,4 @@
-find_package(Qt6 REQUIRED COMPONENTS Core Network Gui Widgets PrintSupport)
+find_package(Qt6 REQUIRED COMPONENTS Core Network Gui Widgets PrintSupport Test)
 
 find_package(Catch2 3 QUIET)
 if(NOT Catch2_FOUND)
@@ -17,6 +17,7 @@ add_executable(orVocAppTests
     test_vocabmanager.cpp
     test_networkclient.cpp
     test_pdfexporter.cpp
+    test_baseexporter_cancel.cpp
     ${CMAKE_SOURCE_DIR}/orVocApp/vocabmanager.cpp
     ${CMAKE_SOURCE_DIR}/orVocApp/networkclient.cpp
     ${CMAKE_SOURCE_DIR}/orVocApp/baseexporter.cpp
@@ -35,6 +36,7 @@ target_link_libraries(orVocAppTests
         Qt6::Gui
         Qt6::Widgets
         Qt6::PrintSupport
+        Qt6::Test
 )
 
 include(CTest)
