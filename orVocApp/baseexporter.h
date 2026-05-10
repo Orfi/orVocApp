@@ -83,6 +83,21 @@ public:
      */
     bool isCancelled() const { return m_cancelled.load(std::memory_order_acquire); }
 
+    /// @brief Maximum retry attempts per network request before failing the whole export.
+    static constexpr int kMaxRetries = 3;
+
+    /// @brief Per-request transfer timeout in milliseconds (applied to both dict and translation).
+    static constexpr int kTransferTimeoutMs = 10000;
+
+    /**
+     * @brief Returns the backoff delay in milliseconds for retry attempt @p attempt.
+     * @param attempt Zero-based attempt index (0 == first retry, 1 == second, …).
+     * @return 500 ms for attempt 0, 1500 ms for attempt 1, 4500 ms for attempt 2, and
+     *         more generally @c 500 * 3^attempt. Defined as a pure function so it can
+     *         be unit-tested without touching the network.
+     */
+    static int retryBackoffMs(int attempt);
+
 signals:
     /**
      * @brief Emitted after each word's fetch phase finishes (regardless of success).

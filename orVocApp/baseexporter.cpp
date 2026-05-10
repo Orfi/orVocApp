@@ -20,6 +20,15 @@ BaseExporter::~BaseExporter()
     delete m_nam;
 }
 
+int BaseExporter::retryBackoffMs(int attempt)
+{
+    // 500 * 3^attempt — 500, 1500, 4500 for attempts 0..2.
+    int delay = 500;
+    for (int i = 0; i < attempt; ++i)
+        delay *= 3;
+    return delay;
+}
+
 void BaseExporter::exportToFile(const QString &outputPath)
 {
     m_outputPath = outputPath;
