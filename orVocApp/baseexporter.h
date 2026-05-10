@@ -90,11 +90,20 @@ public:
     static constexpr int kTransferTimeoutMs = 10000;
 
     /**
-     * @brief Returns the backoff delay in milliseconds for retry attempt @p attempt.
-     * @param attempt Zero-based attempt index (0 == first retry, 1 == second, …).
+     * @brief Returns the delay to wait *before* attempting retry number @p attempt.
+     * @param attempt Zero-based attempt index. Must satisfy
+     *                @c 0 <= attempt < kMaxRetries (i.e. 0, 1, or 2 with the
+     *                current @ref kMaxRetries of 3). 0 == delay before the
+     *                first retry, 1 == delay before the second, etc.
      * @return 500 ms for attempt 0, 1500 ms for attempt 1, 4500 ms for attempt 2, and
      *         more generally @c 500 * 3^attempt. Defined as a pure function so it can
      *         be unit-tested without touching the network.
+     *
+     * @note Behaviour is undefined for @p attempt outside the documented
+     *       range; a Q_ASSERT enforces the contract in debug builds. The
+     *       @c int return type and base-3 growth mean callers must not
+     *       pass large values — @c 500 * 3^attempt overflows 32-bit signed
+     *       around @c attempt == 19.
      */
     static int retryBackoffMs(int attempt);
 

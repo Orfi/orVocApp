@@ -22,6 +22,7 @@ BaseExporter::~BaseExporter()
 
 int BaseExporter::retryBackoffMs(int attempt)
 {
+    Q_ASSERT(attempt >= 0 && attempt < kMaxRetries);
     // 500 * 3^attempt — 500, 1500, 4500 for attempts 0..2.
     int delay = 500;
     for (int i = 0; i < attempt; ++i)
