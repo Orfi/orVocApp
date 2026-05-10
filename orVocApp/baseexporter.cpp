@@ -158,8 +158,6 @@ void BaseExporter::advanceWord()
 {
     emit progress(m_currentIndex + 1, m_words.size());
     m_currentIndex++;
-    m_retryAttempt = 0;
-    m_currentPhase = FetchPhase::Definition;
     QTimer::singleShot(150, this, &BaseExporter::fetchNextWord);
 }
 

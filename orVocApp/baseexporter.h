@@ -166,7 +166,7 @@ private:
     QPointer<QNetworkReply> m_currentReply;
 
     FetchPhase m_currentPhase = FetchPhase::Definition;
-    int m_retryAttempt = 0;       ///< 0 = original attempt; >0 = retry number.
+    int m_retryAttempt = 0;       ///< Retries already attempted for the current leg (0..kMaxRetries).
 };
 
 #endif // BASEEXPORTER_H
