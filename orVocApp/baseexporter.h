@@ -31,13 +31,22 @@ struct WordEntry {
  * @brief Abstract base class for exporters that need dictionary + translation data per word.
  *
  * Runs a two-phase pipeline:
- *  1. Fetch phase — sequentially fetches the dictionary entry and Arabic translation
- *     for each input word via QNetworkAccessManager, throttled by 150 ms between words.
+ *  1. Fetch phase — for each input word, sequentially fetches the dictionary entry
+ *     and then the Arabic translation via QNetworkAccessManager. Each individual
+ *     request carries a @ref kTransferTimeoutMs transfer timeout and is retried up
+ *     to @ref kMaxRetries times with exponential backoff (see @ref retryBackoffMs)
+ *     on any network/parse failure. If retries are exhausted for a single word, the
+ *     whole export hard-fails via @ref finished with @c success=false — the pipeline
+ *     never silently drops words from the output. A @ref kInterWordDelayMs throttle
+ *     is applied between consecutive words to stay under the rate-limit of the free
+ *     public APIs (dictionaryapi.dev is Cloudflare-fronted and trips a 1015 ban on
+ *     bursts).
  *  2. Render phase — spawns a QThread that calls the subclass-provided
  *     @ref renderToFile implementation with the successfully-fetched entries.
  *
  * Subclasses implement @ref renderToFile to produce a format-specific output file
- * (e.g. PDF). Progress is reported via @ref progress; completion via @ref finished.
+ * (e.g. PDF). Progress is reported via @ref progress; completion via @ref finished;
+ * user-initiated cancellation via @ref cancelled.
  */
 class BaseExporter : public QObject
 {
