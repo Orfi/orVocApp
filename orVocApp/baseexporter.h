@@ -83,6 +83,11 @@ public:
      */
     bool isCancelled() const { return m_cancelled.load(std::memory_order_acquire); }
 
+    /// @brief Delay between finishing one word's fetch pair and starting the next,
+    /// in milliseconds. Paces requests to dictionaryapi.dev (Cloudflare-fronted,
+    /// trips rate-limit 1015 at low values); keep ≥ ~1000 to avoid 429 bursts.
+    static constexpr int kInterWordDelayMs = 1000;
+
     /// @brief Maximum retry attempts per network request before failing the whole export.
     static constexpr int kMaxRetries = 3;
 

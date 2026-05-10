@@ -57,3 +57,11 @@ TEST_CASE("BaseExporter retry constants are sane",
     REQUIRE(BaseExporter::kMaxRetries == 3);
     REQUIRE(BaseExporter::kTransferTimeoutMs >= 5000);
 }
+
+TEST_CASE("BaseExporter inter-word delay is paced for Cloudflare rate-limits",
+          "[baseexporter][retry]")
+{
+    // Cloudflare 1015 trips on dictionaryapi.dev at burst rates;
+    // keep at least 1 req/sec between words as a policy floor.
+    REQUIRE(BaseExporter::kInterWordDelayMs >= 1000);
+}

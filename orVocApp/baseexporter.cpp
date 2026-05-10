@@ -192,7 +192,7 @@ void BaseExporter::advanceWord()
 {
     emit progress(m_currentIndex + 1, m_words.size());
     m_currentIndex++;
-    QTimer::singleShot(150, this, &BaseExporter::fetchNextWord);
+    QTimer::singleShot(kInterWordDelayMs, this, &BaseExporter::fetchNextWord);
 }
 
 void BaseExporter::startRender()
