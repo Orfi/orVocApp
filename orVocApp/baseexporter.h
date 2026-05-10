@@ -147,9 +147,14 @@ protected:
     virtual bool renderToFile(const QVector<WordEntry> &entries, const QString &outputPath) = 0;
 
 private:
-    void fetchNextWord();
-    void onDefinitionReply(int index, QNetworkReply *reply);
-    void onTranslationReply(int index, QNetworkReply *reply);
+    /// @brief Which leg of the per-word fetch pair is currently in-flight.
+    enum class FetchPhase { Definition, Translation };
+
+    void fetchNextWord();         ///< Resets retry state and starts the definition leg for m_currentIndex.
+    void issueCurrentRequest();   ///< (Re-)issues the HTTP GET for the current phase+word.
+    void onReplyFinished(QNetworkReply *reply); ///< Handles dict or translation reply based on m_currentPhase.
+    void scheduleRetryOrFail();   ///< Schedules a backoff retry of issueCurrentRequest, or hard-fails the export.
+    void advanceWord();           ///< Emits progress, clears retry state, schedules next word via the 150ms throttle.
     void startRender();
 
     QStringList m_words;
@@ -159,6 +164,9 @@ private:
     int m_currentIndex = 0;
     std::atomic<bool> m_cancelled{false};
     QPointer<QNetworkReply> m_currentReply;
+
+    FetchPhase m_currentPhase = FetchPhase::Definition;
+    int m_retryAttempt = 0;       ///< 0 = original attempt; >0 = retry number.
 };
 
 #endif // BASEEXPORTER_H

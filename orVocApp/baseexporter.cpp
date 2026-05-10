@@ -60,75 +60,106 @@ void BaseExporter::fetchNextWord()
         return;
     }
 
+    m_currentPhase = FetchPhase::Definition;
+    m_retryAttempt = 0;
+    issueCurrentRequest();
+}
+
+void BaseExporter::issueCurrentRequest()
+{
+    if (m_cancelled.load(std::memory_order_acquire)) {
+        emit cancelled();
+        return;
+    }
+
     const QString &word = m_words[m_currentIndex];
 
-    QUrl defUrl("https://api.dictionaryapi.dev/api/v2/entries/en/" + word);
-    QNetworkReply *reply = m_nam->get(QNetworkRequest(defUrl));
+    QNetworkRequest request;
+    if (m_currentPhase == FetchPhase::Definition) {
+        QUrl url("https://api.dictionaryapi.dev/api/v2/entries/en/" + word);
+        request.setUrl(url);
+    } else {
+        QUrl url("https://translate.googleapis.com/translate_a/single");
+        QUrlQuery query;
+        query.addQueryItem("client", "gtx");
+        query.addQueryItem("sl", "en");
+        query.addQueryItem("tl", "ar");
+        query.addQueryItem("dt", "t");
+        query.addQueryItem("q", word);
+        url.setQuery(query);
+        request.setUrl(url);
+    }
+    request.setTransferTimeout(kTransferTimeoutMs);
+
+    QNetworkReply *reply = m_nam->get(request);
     m_currentReply = reply;
     connect(reply, &QNetworkReply::finished, this, [this, reply]() {
         reply->deleteLater();
-        onDefinitionReply(m_currentIndex, reply);
+        onReplyFinished(reply);
     });
 }
 
-void BaseExporter::onDefinitionReply(int index, QNetworkReply *defReply)
+void BaseExporter::onReplyFinished(QNetworkReply *reply)
 {
     if (m_cancelled.load(std::memory_order_acquire)) {
         emit cancelled();
         return;
     }
 
-    WordEntry &entry = m_entries[index];
+    WordEntry &entry = m_entries[m_currentIndex];
 
-    if (defReply->error() == QNetworkReply::NoError) {
-        auto result = NetworkClient::parseDictionaryResponse(defReply->readAll());
-        if (!result.error) {
-            entry.definitionHtml = result.html;
-            entry.phonetic = result.phonetic;
+    if (reply->error() == QNetworkReply::NoError) {
+        QByteArray body = reply->readAll();
 
-            QUrl transUrl("https://translate.googleapis.com/translate_a/single");
-            QUrlQuery query;
-            query.addQueryItem("client", "gtx");
-            query.addQueryItem("sl", "en");
-            query.addQueryItem("tl", "ar");
-            query.addQueryItem("dt", "t");
-            query.addQueryItem("q", entry.word);
-            transUrl.setQuery(query);
-
-            QNetworkReply *transReply = m_nam->get(QNetworkRequest(transUrl));
-            m_currentReply = transReply;
-            connect(transReply, &QNetworkReply::finished, this, [this, transReply]() {
-                transReply->deleteLater();
-                onTranslationReply(m_currentIndex, transReply);
-            });
-            return;
+        if (m_currentPhase == FetchPhase::Definition) {
+            auto result = NetworkClient::parseDictionaryResponse(body);
+            if (!result.error) {
+                entry.definitionHtml = result.html;
+                entry.phonetic = result.phonetic;
+                m_currentPhase = FetchPhase::Translation;
+                m_retryAttempt = 0;
+                issueCurrentRequest();
+                return;
+            }
+        } else {
+            auto result = NetworkClient::parseTranslationResponse(body);
+            if (!result.error) {
+                entry.translationHtml = result.html;
+                entry.valid = true;
+                advanceWord();
+                return;
+            }
         }
     }
 
-    emit progress(m_currentIndex + 1, m_words.size());
-    m_currentIndex++;
-    QTimer::singleShot(150, this, &BaseExporter::fetchNextWord);
+    scheduleRetryOrFail();
 }
 
-void BaseExporter::onTranslationReply(int index, QNetworkReply *transReply)
+void BaseExporter::scheduleRetryOrFail()
 {
     if (m_cancelled.load(std::memory_order_acquire)) {
         emit cancelled();
         return;
     }
 
-    WordEntry &entry = m_entries[index];
-
-    if (transReply->error() == QNetworkReply::NoError) {
-        auto result = NetworkClient::parseTranslationResponse(transReply->readAll());
-        if (!result.error) {
-            entry.translationHtml = result.html;
-            entry.valid = true;
-        }
+    if (m_retryAttempt >= kMaxRetries) {
+        // Exhausted retries for this word — hard-fail the whole export.
+        // No partial PDF exists yet (render phase hasn't started).
+        emit finished(false, m_outputPath);
+        return;
     }
 
+    const int delay = retryBackoffMs(m_retryAttempt);
+    ++m_retryAttempt;
+    QTimer::singleShot(delay, this, &BaseExporter::issueCurrentRequest);
+}
+
+void BaseExporter::advanceWord()
+{
     emit progress(m_currentIndex + 1, m_words.size());
     m_currentIndex++;
+    m_retryAttempt = 0;
+    m_currentPhase = FetchPhase::Definition;
     QTimer::singleShot(150, this, &BaseExporter::fetchNextWord);
 }
 
