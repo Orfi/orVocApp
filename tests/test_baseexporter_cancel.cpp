@@ -42,3 +42,26 @@ TEST_CASE("BaseExporter cancel before first fetch emits cancelled without finish
     REQUIRE(cancelledSpy.count() >= 1);
     REQUIRE(finishedSpy.count() == 0);
 }
+
+TEST_CASE("BaseExporter retryBackoffMs produces the documented schedule",
+          "[baseexporter][retry]")
+{
+    REQUIRE(BaseExporter::retryBackoffMs(0) == 500);
+    REQUIRE(BaseExporter::retryBackoffMs(1) == 1500);
+    REQUIRE(BaseExporter::retryBackoffMs(2) == 4500);
+}
+
+TEST_CASE("BaseExporter retry constants are sane",
+          "[baseexporter][retry]")
+{
+    REQUIRE(BaseExporter::kMaxRetries == 3);
+    REQUIRE(BaseExporter::kTransferTimeoutMs >= 5000);
+}
+
+TEST_CASE("BaseExporter inter-word delay is paced for Cloudflare rate-limits",
+          "[baseexporter][retry]")
+{
+    // Cloudflare 1015 trips on dictionaryapi.dev at burst rates;
+    // keep at least 1 req/sec between words as a policy floor.
+    REQUIRE(BaseExporter::kInterWordDelayMs >= 1000);
+}
