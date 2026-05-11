@@ -2,7 +2,6 @@
 
 #include "networkclient.h"
 
-#include <QDebug>
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
 #include <QNetworkRequest>
@@ -73,11 +72,6 @@ void BaseExporter::issueCurrentRequest()
         return;
     }
 
-    qDebug().noquote() << "[RVC-45] issueCurrentRequest idx=" << m_currentIndex
-                       << "word=" << m_words[m_currentIndex]
-                       << "phase=" << (m_currentPhase == FetchPhase::Definition ? "Definition" : "Translation")
-                       << "retryAttempt=" << m_retryAttempt;
-
     const QString &word = m_words[m_currentIndex];
 
     QNetworkRequest request;
@@ -98,7 +92,6 @@ void BaseExporter::issueCurrentRequest()
     request.setTransferTimeout(kTransferTimeoutMs);
 
     QNetworkReply *reply = m_nam->get(request);
-    qDebug().noquote() << "[RVC-45]   issued url=" << request.url().toString();
     m_currentReply = reply;
     connect(reply, &QNetworkReply::finished, this, [this, reply]() {
         reply->deleteLater();
@@ -113,17 +106,6 @@ void BaseExporter::onReplyFinished(QNetworkReply *reply)
         return;
     }
 
-    const QVariant httpStatus = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute);
-    const QByteArray peek = reply->peek(200);
-    qDebug().noquote() << "[RVC-45] onReplyFinished idx=" << m_currentIndex
-                       << "word=" << m_words[m_currentIndex]
-                       << "phase=" << (m_currentPhase == FetchPhase::Definition ? "Definition" : "Translation")
-                       << "retryAttempt=" << m_retryAttempt
-                       << "qnrError=" << reply->error()
-                       << "errString=" << reply->errorString()
-                       << "httpStatus=" << (httpStatus.isValid() ? httpStatus.toString() : "(none)")
-                       << "bodyPeek(200)=" << QString::fromUtf8(peek);
-
     WordEntry &entry = m_entries[m_currentIndex];
 
     if (reply->error() == QNetworkReply::NoError) {
@@ -131,10 +113,6 @@ void BaseExporter::onReplyFinished(QNetworkReply *reply)
 
         if (m_currentPhase == FetchPhase::Definition) {
             auto result = NetworkClient::parseDictionaryResponse(body);
-            qDebug().noquote() << "[RVC-45]   parseDictionary result.error=" << result.error
-                               << "htmlLen=" << result.html.size()
-                               << "phonetic=" << result.phonetic
-                               << "audioUrl=" << result.audioUrl.toString();
             if (!result.error) {
                 entry.definitionHtml = result.html;
                 entry.phonetic = result.phonetic;
@@ -145,8 +123,6 @@ void BaseExporter::onReplyFinished(QNetworkReply *reply)
             }
         } else {
             auto result = NetworkClient::parseTranslationResponse(body);
-            qDebug().noquote() << "[RVC-45]   parseTranslation result.error=" << result.error
-                               << "htmlLen=" << result.html.size();
             if (!result.error) {
                 entry.translationHtml = result.html;
                 entry.valid = true;
@@ -166,25 +142,15 @@ void BaseExporter::scheduleRetryOrFail()
         return;
     }
 
-    qDebug().noquote() << "[RVC-45] scheduleRetryOrFail idx=" << m_currentIndex
-                       << "word=" << m_words[m_currentIndex]
-                       << "phase=" << (m_currentPhase == FetchPhase::Definition ? "Definition" : "Translation")
-                       << "retryAttempt=" << m_retryAttempt
-                       << "kMaxRetries=" << kMaxRetries;
-
     if (m_retryAttempt >= kMaxRetries) {
         // Exhausted retries for this word — hard-fail the whole export.
         // No partial PDF exists yet (render phase hasn't started).
-        qDebug().noquote() << "[RVC-45]   HARD-FAIL: retries exhausted for idx="
-                           << m_currentIndex << "word=" << m_words[m_currentIndex];
         emit finished(false, m_outputPath);
         return;
     }
 
     const int delay = retryBackoffMs(m_retryAttempt);
     ++m_retryAttempt;
-    qDebug().noquote() << "[RVC-45]   scheduling retry in" << delay << "ms (attempt becomes"
-                       << m_retryAttempt << "of" << kMaxRetries << ")";
     QTimer::singleShot(delay, this, &BaseExporter::issueCurrentRequest);
 }
 
