@@ -149,7 +149,10 @@ TEST_CASE("VocabManager JSON persistence", "[vocabmanager][json]") {
         QString dataDir = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
         QDir().mkpath(dataDir);
         QFile file(dataDir + "/vocab.json");
-        file.open(QIODevice::WriteOnly);
+        if (!file.open(QIODevice::WriteOnly)) {
+            FAIL("Could not open test file: " + file.errorString().toStdString());
+            return;
+        }
         file.write("not valid json {{{");
         file.close();
 
@@ -248,7 +251,10 @@ TEST_CASE("VocabManager export and import", "[vocabmanager][io]") {
         // Write a JSON file to import
         QString importPath = tmpDir.path() + "/import.json";
         QFile file(importPath);
-        file.open(QIODevice::WriteOnly);
+        if (!file.open(QIODevice::WriteOnly)) {
+            FAIL("Could not open test file: " + file.errorString().toStdString());
+            return;
+        }
         file.write(R"({"words": ["delta", "alpha", "gamma"]})");
         file.close();
 
@@ -262,7 +268,10 @@ TEST_CASE("VocabManager export and import", "[vocabmanager][io]") {
 
         QString importPath = tmpDir.path() + "/bad.json";
         QFile file(importPath);
-        file.open(QIODevice::WriteOnly);
+        if (!file.open(QIODevice::WriteOnly)) {
+            FAIL("Could not open test file: " + file.errorString().toStdString());
+            return;
+        }
         file.write("not json {{{");
         file.close();
 
@@ -277,7 +286,10 @@ TEST_CASE("VocabManager export and import", "[vocabmanager][io]") {
 
         QString importPath = tmpDir.path() + "/import.txt";
         QFile file(importPath);
-        file.open(QIODevice::WriteOnly);
+        if (!file.open(QIODevice::WriteOnly)) {
+            FAIL("Could not open test file: " + file.errorString().toStdString());
+            return;
+        }
         file.write("banana\napple\ndate\n");
         file.close();
 
@@ -290,7 +302,10 @@ TEST_CASE("VocabManager export and import", "[vocabmanager][io]") {
 
         QString importPath = tmpDir.path() + "/messy.txt";
         QFile file(importPath);
-        file.open(QIODevice::WriteOnly);
+        if (!file.open(QIODevice::WriteOnly)) {
+            FAIL("Could not open test file: " + file.errorString().toStdString());
+            return;
+        }
         file.write("  apple  \n\n  banana \n   \ncherry\n");
         file.close();
 

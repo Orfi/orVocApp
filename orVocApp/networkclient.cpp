@@ -26,46 +26,44 @@ DictionaryResult NetworkClient::parseDictionaryResponse(const QByteArray &data)
 
     QJsonObject entry = doc.array().first().toObject();
 
-    // Extract phonetic
-    result.phonetic = entry.value("phonetic").toString();
-
-    // Extract audio URL — find first phonetics entry with a non-empty .mp3 audio
-    QJsonArray phonetics = entry.value("phonetics").toArray();
-    for (const QJsonValue &p : phonetics) {
-        QString audio = p.toObject().value("audio").toString();
-        if (!audio.isEmpty() && audio.startsWith("http")) {
-            result.audioUrl = QUrl(audio);
+    // Phonetic — from hwi.prs[].ipa (Merriam-Webster)
+    QJsonObject hwi = entry.value("hwi").toObject();
+    QJsonArray prs = hwi.value("prs").toArray();
+    for (const QJsonValue &p : prs) {
+        QString ipa = p.toObject().value("ipa").toString();
+        if (!ipa.isEmpty()) {
+            result.phonetic = ipa;
             break;
         }
     }
 
-    // If phonetic was empty, try from phonetics array
-    if (result.phonetic.isEmpty()) {
-        for (const QJsonValue &p : phonetics) {
-            QString text = p.toObject().value("text").toString();
-            if (!text.isEmpty()) {
-                result.phonetic = text;
-                break;
-            }
-        }
+    // Audio URL — MW current scheme: media.merriam-webster.com/audio/prs/en/us/mp3/{subdir}/{audio}.mp3
+    // field source: MW nests audio under prs[].sound.audio (hwi.sound is empty)
+    QString audio;
+    for (const QJsonValue &pp : hwi.value("prs").toArray()) {
+        audio = pp.toObject().value("sound").toObject().value("audio").toString();
+        if (!audio.isEmpty()) break;
+    }
+    if (!audio.isEmpty()) {
+        QString subdir;
+        if (audio.startsWith("bix")) subdir = "bix";
+        else if (audio.startsWith("gg")) subdir = "gg";
+        else if (audio.left(1) >= "0" && audio.left(1) <= "9") subdir = "number";
+        else subdir = audio.left(1);
+        result.audioUrl = QUrl("https://media.merriam-webster.com/soundc11/" + subdir + "/" + audio + ".wav");
     }
 
-    // Build HTML from meanings
+    // Build HTML from MW shortdef array + part of speech
     QString html;
-    QJsonArray meanings = entry.value("meanings").toArray();
-    for (const QJsonValue &m : meanings) {
-        QJsonObject meaning = m.toObject();
-        QString pos = meaning.value("partOfSpeech").toString();
-        html += "<p><b>" + pos + "</b></p>";
+    QString fl = entry.value("fl").toString();
+    if (!fl.isEmpty())
+        html += "<p><b>" + fl + "</b></p>";
 
-        QJsonArray definitions = meaning.value("definitions").toArray();
-        for (const QJsonValue &d : definitions) {
-            QJsonObject def = d.toObject();
-            html += "<p>" + def.value("definition").toString() + "</p>";
-            QString example = def.value("example").toString();
-            if (!example.isEmpty())
-                html += "<p><i>\"" + example + "\"</i></p>";
-        }
+    QJsonArray shortdef = entry.value("shortdef").toArray();
+    for (const QJsonValue &d : shortdef) {
+        QString def = d.toString();
+        if (!def.isEmpty())
+            html += "<p>" + def + "</p>";
     }
 
     if (html.isEmpty())
@@ -77,7 +75,7 @@ DictionaryResult NetworkClient::parseDictionaryResponse(const QByteArray &data)
 
 void NetworkClient::fetchDefinition(const QString &word)
 {
-    QUrl url("https://api.dictionaryapi.dev/api/v2/entries/en/" + word);
+    QUrl url("https://www.dictionaryapi.com/api/v3/references/collegiate/json/" + word + "?key=6db9cb08-34fb-4a9e-abd8-a08586b2113a");
     QNetworkReply *reply = m_nam->get(QNetworkRequest(url));
 
     connect(reply, &QNetworkReply::finished, this, [this, reply, word]() {
