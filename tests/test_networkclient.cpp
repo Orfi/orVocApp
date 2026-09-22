@@ -14,30 +14,17 @@ TEST_CASE("NetworkClient dictionary parsing", "[networkclient][dictionary]") {
     // Sample dictionary API response for "hello"
     QByteArray dictResponse = R"([
         {
-            "word": "hello",
-            "phonetic": "/həˈloʊ/",
-            "phonetics": [
-                { "text": "/həˈloʊ/" },
-                { "text": "/həˈloʊ/", "audio": "https://api.dictionaryapi.dev/media/pronunciations/en/hello-us.mp3" }
-            ],
-            "meanings": [
-                {
-                    "partOfSpeech": "noun",
-                    "definitions": [
-                        {
-                            "definition": "An utterance of \"hello\"; a greeting.",
-                            "example": "she was getting hellos from everyone"
-                        }
-                    ]
-                },
-                {
-                    "partOfSpeech": "interjection",
-                    "definitions": [
-                        {
-                            "definition": "Used as a greeting."
-                        }
-                    ]
-                }
+            "meta": { "id": "hello" },
+            "fl": "interjection",
+            "hwi": {
+                "hw": "hello",
+                "prs": [
+                    { "mw": "he-\u2032l\u014D", "ipa": "/h\u0259\u02c8lo\u028a/", "sound": { "audio": "hello0001" } }
+                ]
+            },
+            "shortdef": [
+                "Used as a greeting.",
+                "An utterance of \u201chello\u201d; a greeting."
             ]
         }
     ])";
@@ -45,27 +32,26 @@ TEST_CASE("NetworkClient dictionary parsing", "[networkclient][dictionary]") {
     SECTION("parseDictionaryResponse extracts formatted HTML") {
         auto result = NetworkClient::parseDictionaryResponse(dictResponse);
         REQUIRE_FALSE(result.html.isEmpty());
-        REQUIRE(result.html.contains("noun"));
         REQUIRE(result.html.contains("interjection"));
-        REQUIRE(result.html.contains("An utterance of"));
-        REQUIRE(result.html.contains("she was getting hellos"));
+        REQUIRE(result.html.contains("Used as a greeting."));
     }
 
     SECTION("parseDictionaryResponse extracts phonetic text") {
         auto result = NetworkClient::parseDictionaryResponse(dictResponse);
-        REQUIRE(result.phonetic == "/həˈloʊ/");
+        REQUIRE(result.phonetic == "/h\u0259\u02c8lo\u028a/");
     }
 
     SECTION("parseDictionaryResponse extracts first valid mp3 URL") {
         auto result = NetworkClient::parseDictionaryResponse(dictResponse);
-        REQUIRE(result.audioUrl == QUrl("https://api.dictionaryapi.dev/media/pronunciations/en/hello-us.mp3"));
+        REQUIRE(result.audioUrl == QUrl("https://media.merriam-webster.com/soundc11/h/hello0001.wav"));
     }
 
     SECTION("parseDictionaryResponse with no audio returns empty URL") {
         QByteArray noAudio = R"([{
-            "word": "test",
-            "phonetics": [{ "text": "/tɛst/" }],
-            "meanings": [{ "partOfSpeech": "noun", "definitions": [{ "definition": "A trial." }] }]
+            "meta": { "id": "test" },
+            "fl": "noun",
+            "hwi": { "hw": "test", "prs": [ { "mw": "\u2032test" } ] },
+            "shortdef": [ "A trial." ]
         }])";
 
         auto result = NetworkClient::parseDictionaryResponse(noAudio);
