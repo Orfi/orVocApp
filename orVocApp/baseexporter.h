@@ -101,7 +101,7 @@ public:
     static constexpr int kMaxRetries = 3;
 
     /// @brief Per-request transfer timeout in milliseconds (applied to both dict and translation).
-    static constexpr int kTransferTimeoutMs = 10000;
+    static constexpr int kTransferTimeoutMs = 30000;
 
     /**
      * @brief Returns the delay to wait *before* attempting retry number @p attempt.
