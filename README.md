@@ -18,9 +18,9 @@ A lightweight Qt 6 / QML desktop vocabulary builder for personal word bank manag
 ## Features
 
 - **Word Bank** -- curate a personal vocabulary list with automatic alphabetical sorting
-- **English Definitions** -- instant lookup via [Free Dictionary API](https://dictionaryapi.dev/)
+- **English Definitions** -- Merriam-Webster Collegiate Dictionary (keyed, collegiate/json) + embedded IPA pronunciation
 - **Arabic Translations** -- powered by Google Translate (GTX API) with full RTL support
-- **Audio Pronunciation** -- play word pronunciations directly in the app
+- **Audio Pronunciation** -- MW `soundc11` host, plays `.wav` pronunciation clips
 - **Search & Filter** -- real-time case-insensitive filtering as you type
 - **PDF Dictionary Export** -- generate a formatted PDF dictionary with cover page, letter tabs, and spacious entry layout (A4 or Letter)
 - **Import / Export** -- JSON and plain-text formats for portability, consolidated toolbar with format selection popups
@@ -146,9 +146,15 @@ packaging/
 
 | API | Purpose | URL |
 |-----|---------|-----|
-| Free Dictionary API | English definitions + phonetics + audio | `api.dictionaryapi.dev/api/v2/entries/en/{word}` |
+| Merriam-Webster Collegiate | English definitions + IPA + pronunciation audio | `www.dictionaryapi.com/api/v3/references/collegiate/json/{word}?key={KEY}` |
 | Google Translate GTX | English to Arabic translation | `translate.googleapis.com/translate_a/single` |
 
+## Quota & Audio
+
+- English lookups call Merriam-Webster's Collegiate API (~**1000 req/day** shared daily quota, requires a free key). Arabic via GTX is separate and effectively unlimited.
+- Pronunciation clips come from `media.merriam-webster.com/soundc11/` (`.wav`); audio is played via QtMultimedia (FFmpeg backend).
+
 ## License
+
 
 Private project.
