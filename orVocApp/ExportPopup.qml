@@ -14,8 +14,8 @@ Popup {
     signal exportRequested(string format, int pageSize)
 
     onExportingChanged: {
-        if (exporting && formatGroup.checkedButton === pdfRadio) {
-            jsonRadio.checked = true;
+        if (exporting && formatGroup.checkedButton !== textRadio) {
+            textRadio.checked = true;
         }
     }
 
@@ -43,6 +43,8 @@ Popup {
             id: jsonRadio
             text: "JSON"
             checked: true
+            enabled: !exportPopup.exporting
+            opacity: enabled ? 1.0 : 0.4
             ButtonGroup.group: formatGroup
         }
 

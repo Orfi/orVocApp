@@ -1,5 +1,7 @@
 // orVocApp/vocabmanager.cpp
 #include "vocabmanager.h"
+#include "dictionarycache.h"
+#include "jsonexporter.h"
 #include "pdfexporter.h"
 #include <algorithm>
 #include <QDir>
@@ -67,6 +69,7 @@ void VocabManager::removeWord(const QString &word)
     int idx = current.indexOf(normalized);
     if (idx >= 0) {
         m_sourceModel->removeRow(idx);
+        DictionaryCache::instance().remove(normalized);
         saveToJson();
         emit wordsChanged();
     }
@@ -153,8 +156,25 @@ void VocabManager::exportJson(const QUrl &path)
     for (const QString &w : m_sourceModel->stringList())
         arr.append(w);
 
+    // Enrich with whatever definitions are already cached (no new network
+    // fetches here) so the export is portable and re-importable without
+    // re-spending MW's daily quota. Only the English definition HTML is
+    // included — translation and pronunciation are never cached and are
+    // irrelevant to this backup format. Words with no cached lookup yet are
+    // simply absent from the map.
+    QJsonObject definitions;
+    for (const QString &w : m_sourceModel->stringList()) {
+        if (DictionaryCache::instance().contains(w)) {
+            CachedDefinition cached = DictionaryCache::instance().get(w);
+            QJsonObject def;
+            def["html"] = cached.html;
+            definitions[w] = def;
+        }
+    }
+
     QJsonObject obj;
     obj["words"] = arr;
+    obj["definitions"] = definitions;
     file.write(QJsonDocument(obj).toJson());
     file.close();
 }
@@ -199,6 +219,19 @@ void VocabManager::importJson(const QUrl &path)
 
     newWords.sort();
     m_sourceModel->setStringList(newWords);
+
+    // Hydrate the cache from any "definitions" map in the import file so
+    // previously-fetched words don't need to hit MW again after import.
+    // Imported entries overwrite any existing local cache for the same word.
+    QJsonObject definitions = doc.object().value("definitions").toObject();
+    for (auto it = definitions.begin(); it != definitions.end(); ++it) {
+        QJsonObject def = it.value().toObject();
+        CachedDefinition cached;
+        cached.html = def.value("html").toString();
+        if (!cached.html.isEmpty())
+            DictionaryCache::instance().insert(it.key(), cached);
+    }
+
     saveToJson();
     emit wordsChanged();
 }
@@ -233,6 +266,11 @@ QObject* VocabManager::createPdfExporter(int pageSize)
     auto sizeId = (pageSize == 0) ? QPageSize::A4 : QPageSize::Letter;
     auto *exporter = new PdfExporter(words(), sizeId);
     return exporter;
+}
+
+QObject* VocabManager::createJsonExporter()
+{
+    return new JsonExporter(words());
 }
 
 QString VocabManager::dataFilePath() const

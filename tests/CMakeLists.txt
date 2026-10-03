@@ -18,10 +18,14 @@ add_executable(orVocAppTests
     test_networkclient.cpp
     test_pdfexporter.cpp
     test_baseexporter_cancel.cpp
+    test_jsonexporter.cpp
     ${CMAKE_SOURCE_DIR}/orVocApp/vocabmanager.cpp
     ${CMAKE_SOURCE_DIR}/orVocApp/networkclient.cpp
+    ${CMAKE_SOURCE_DIR}/orVocApp/dictionarycache.cpp
+    ${CMAKE_SOURCE_DIR}/orVocApp/applogger.cpp
     ${CMAKE_SOURCE_DIR}/orVocApp/baseexporter.cpp
     ${CMAKE_SOURCE_DIR}/orVocApp/pdfexporter.cpp
+    ${CMAKE_SOURCE_DIR}/orVocApp/jsonexporter.cpp
 )
 
 set_target_properties(orVocAppTests PROPERTIES AUTOMOC ON)

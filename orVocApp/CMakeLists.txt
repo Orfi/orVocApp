@@ -8,10 +8,16 @@ qt_add_executable(orVocApp
     vocabmanager.cpp
     networkclient.h
     networkclient.cpp
+    dictionarycache.h
+    dictionarycache.cpp
+    applogger.h
+    applogger.cpp
     baseexporter.h
     baseexporter.cpp
     pdfexporter.h
     pdfexporter.cpp
+    jsonexporter.h
+    jsonexporter.cpp
 )
 
 # Windows: embed icon + version info into the exe (A)

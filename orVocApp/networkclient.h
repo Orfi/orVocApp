@@ -47,7 +47,7 @@ public:
     explicit NetworkClient(QObject *parent = nullptr);
 
     /**
-     * @brief Fetches the English definition from dictionaryapi.dev.
+     * @brief Fetches the English definition from the Merriam-Webster Collegiate API.
      * @param word The word to look up.
      *
      * On success emits @ref definitionReady, @ref phoneticReady, and
@@ -67,7 +67,7 @@ public:
 
     /**
      * @brief Parses a raw dictionary API JSON response.
-     * @param data The raw JSON bytes from dictionaryapi.dev.
+     * @param data The raw JSON bytes from the Merriam-Webster Collegiate API.
      * @return DictionaryResult with HTML, phonetic, and audio URL; error=true on parse failure.
      */
     static DictionaryResult parseDictionaryResponse(const QByteArray &data);

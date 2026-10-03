@@ -91,8 +91,12 @@ public:
     Q_INVOKABLE void saveToJson();
 
     /**
-     * @brief Exports the word bank as a JSON file at a user-chosen path.
+     * @brief Exports the word bank as a JSON file at a user-chosen path, instantly.
      * @param path File URL chosen by the user via FileDialog.
+     *
+     * Includes a "definitions" map of whatever English definitions are already
+     * cached (html only) — no network fetches are made. For an export that also
+     * fetches definitions missing from the cache, use @ref createJsonExporter.
      */
     Q_INVOKABLE void exportJson(const QUrl &path);
 
@@ -126,6 +130,16 @@ public:
      * @return A newly-allocated PdfExporter QObject; ownership is transferred to QML.
      */
     Q_INVOKABLE QObject* createPdfExporter(int pageSize);
+
+    /**
+     * @brief Factory for a JsonExporter pre-populated with the current word list.
+     * @return A newly-allocated JsonExporter QObject; ownership is transferred to QML.
+     *
+     * Unlike @ref exportJson (instant, cache-only), the returned exporter fetches
+     * any definitions missing from the cache before writing the file, reusing the
+     * same progress/finished/cancelled signals as the PDF exporter.
+     */
+    Q_INVOKABLE QObject* createJsonExporter();
 
 signals:
     /// @brief Emitted whenever the word list mutates (add, remove, import, load).

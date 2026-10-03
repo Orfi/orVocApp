@@ -58,10 +58,10 @@ TEST_CASE("BaseExporter retry constants are sane",
     REQUIRE(BaseExporter::kTransferTimeoutMs >= 5000);
 }
 
-TEST_CASE("BaseExporter inter-word delay is paced for Cloudflare rate-limits",
+TEST_CASE("BaseExporter inter-word delay is paced for API rate-limits",
           "[baseexporter][retry]")
 {
-    // Cloudflare 1015 trips on dictionaryapi.dev at burst rates;
+    // Merriam-Webster's Collegiate API enforces a daily quota and pacing;
     // keep at least 1 req/sec between words as a policy floor.
     REQUIRE(BaseExporter::kInterWordDelayMs >= 1000);
 }

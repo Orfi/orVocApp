@@ -92,6 +92,8 @@ ApplicationWindow {
             Button {
                 id: exportButton
                 text: "Export"
+                enabled: !notificationOverlay.exporting
+                opacity: enabled ? 1.0 : 0.4
                 onClicked: exportPopup.open()
             }
 
@@ -168,7 +170,19 @@ ApplicationWindow {
         fileMode: Platform.FileDialog.SaveFile
         defaultSuffix: "json"
         nameFilters: ["JSON files (*.json)"]
-        onAccepted: VocabManager.exportJson(exportJsonDialog.file)
+        onAccepted: {
+            var exporter = VocabManager.createJsonExporter();
+            notificationOverlay.startExport(VocabManager.words.length);
+            notificationOverlay.setActiveExporter(exporter);
+            exporter.progress.connect(notificationOverlay.updateProgress);
+            exporter.finished.connect(function(success, path) {
+                notificationOverlay.showResult(success);
+            });
+            exporter.cancelled.connect(function() {
+                notificationOverlay.showCancelled();
+            });
+            exporter.exportToFile(exportJsonDialog.file.toString().replace("file://", ""));
+        }
     }
 
     Platform.FileDialog {

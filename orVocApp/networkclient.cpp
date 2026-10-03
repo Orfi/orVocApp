@@ -1,5 +1,7 @@
 // orVocApp/networkclient.cpp
 #include "networkclient.h"
+#include "applogger.h"
+#include "dictionarycache.h"
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -66,6 +68,22 @@ DictionaryResult NetworkClient::parseDictionaryResponse(const QByteArray &data)
             html += "<p>" + def + "</p>";
     }
 
+    // MW cross-reference entries (e.g. "artefact" -> "artifact") have no shortdef;
+    // fall back to the "cxs" cross-reference label + target(s) so the word still
+    // resolves instead of being treated as not-found.
+    if (shortdef.isEmpty()) {
+        QJsonArray cxs = entry.value("cxs").toArray();
+        for (const QJsonValue &c : cxs) {
+            QJsonObject cx = c.toObject();
+            QString label = cx.value("cxl").toString();
+            QStringList targets;
+            for (const QJsonValue &t : cx.value("cxtis").toArray())
+                targets << t.toObject().value("cxt").toString();
+            if (!targets.isEmpty())
+                html += "<p><i>" + label + " " + targets.join(", ") + "</i></p>";
+        }
+    }
+
     if (html.isEmpty())
         result.error = true;
 
@@ -75,6 +93,18 @@ DictionaryResult NetworkClient::parseDictionaryResponse(const QByteArray &data)
 
 void NetworkClient::fetchDefinition(const QString &word)
 {
+    // Serve from cache when available — avoids burning MW's 1000 req/day quota
+    // on words already looked up (whether via export or a prior lookup).
+    if (DictionaryCache::instance().contains(word)) {
+        CachedDefinition cached = DictionaryCache::instance().get(word);
+        emit definitionReady(cached.html);
+        if (!cached.phonetic.isEmpty())
+            emit phoneticReady(cached.phonetic);
+        if (!cached.audioUrl.isEmpty())
+            emit audioUrlReady(cached.audioUrl);
+        return;
+    }
+
     QUrl url("https://www.dictionaryapi.com/api/v3/references/collegiate/json/" + word + "?key=6db9cb08-34fb-4a9e-abd8-a08586b2113a");
     QNetworkReply *reply = m_nam->get(QNetworkRequest(url));
 
@@ -82,6 +112,8 @@ void NetworkClient::fetchDefinition(const QString &word)
         reply->deleteLater();
 
         if (reply->error() != QNetworkReply::NoError) {
+            AppLogger::log(QString("lookup: definition fetch for '%1' failed: %2")
+                               .arg(word, reply->errorString()));
             if (reply->error() == QNetworkReply::ContentNotFoundError)
                 emit requestFailed("definition", QString("No definition found for '%1'.").arg(word));
             else
@@ -91,9 +123,13 @@ void NetworkClient::fetchDefinition(const QString &word)
 
         auto result = parseDictionaryResponse(reply->readAll());
         if (result.error) {
+            AppLogger::log(QString("lookup: definition fetch for '%1' returned HTTP 200 but failed to parse")
+                               .arg(word));
             emit requestFailed("definition", QString("No definition found for '%1'.").arg(word));
             return;
         }
+
+        DictionaryCache::instance().insert(word, {result.html, result.phonetic, result.audioUrl});
 
         emit definitionReady(result.html);
         if (!result.phonetic.isEmpty())
@@ -116,16 +152,20 @@ void NetworkClient::fetchTranslation(const QString &word)
 
     QNetworkReply *reply = m_nam->get(QNetworkRequest(url));
 
-    connect(reply, &QNetworkReply::finished, this, [this, reply]() {
+    connect(reply, &QNetworkReply::finished, this, [this, reply, word]() {
         reply->deleteLater();
 
         if (reply->error() != QNetworkReply::NoError) {
+            AppLogger::log(QString("lookup: translation fetch for '%1' failed: %2")
+                               .arg(word, reply->errorString()));
             emit requestFailed("translation", "Could not fetch translation.");
             return;
         }
 
         auto result = parseTranslationResponse(reply->readAll());
         if (result.error) {
+            AppLogger::log(QString("lookup: translation fetch for '%1' returned HTTP 200 but failed to parse")
+                               .arg(word));
             emit requestFailed("translation", "Could not fetch translation.");
             return;
         }
