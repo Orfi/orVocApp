@@ -23,7 +23,8 @@ A lightweight Qt 6 / QML desktop vocabulary builder for personal word bank manag
 - **Audio Pronunciation** -- MW `soundc11` host, plays `.wav` pronunciation clips
 - **Search & Filter** -- real-time case-insensitive filtering as you type
 - **PDF Dictionary Export** -- generate a formatted PDF dictionary with cover page, letter tabs, and spacious entry layout (A4 or Letter)
-- **Import / Export** -- JSON and plain-text formats for portability, consolidated toolbar with format selection popups
+- **Import / Export** -- JSON (word list + cached English definitions) and plain-text (word list only) formats, consolidated toolbar with format selection popups
+- **Definition Caching** -- successful MW lookups are cached to disk and reused everywhere (sidebar, PDF/JSON export), keeping usage well under the daily quota
 - **Dark Blue Theme** -- off-white text on dark blue, easy on the eyes
 - **Splash Screen** -- branded launch screen
 - **Cross-Platform** -- targets Ubuntu/Linux and Windows 10/11
@@ -78,11 +79,13 @@ build\orVocApp\Release\orVocApp  # Windows
 cd build && ctest --output-on-failure
 ```
 
-11 unit tests covering:
+17 unit tests covering:
 - VocabManager: add/remove, filtering, JSON persistence, import/export
 - NetworkClient: dictionary API parsing, translation API parsing
 - WordEntry: default state validation
 - PdfExporter: letter color uniqueness, PDF file generation (A4 + Letter), multiple letter groups
+- BaseExporter: cancellation, retry backoff schedule, inter-word pacing
+- JsonExporter: definitions written for fetched words, bare word retained on fetch failure
 
 ## Packaging
 
@@ -112,8 +115,10 @@ orVocApp/
   main.cpp              # Entry point, singleton registration, splash screen
   vocabmanager.h/cpp    # Word bank CRUD, JSON persistence, import/export
   networkclient.h/cpp   # REST API calls, response parsing
-  baseexporter.h/cpp    # Abstract base class for exporters
+  dictionarycache.h/cpp # Disk-persisted cache of MW definition lookups (quota protection)
+  baseexporter.h/cpp    # Abstract base class for exporters (cache-first fetch pipeline)
   pdfexporter.h/cpp     # PDF dictionary export (async, threaded rendering)
+  jsonexporter.h/cpp    # JSON export with definitions (async, fetches cache-missing words only)
   Main.qml              # Root layout, toolbar, file dialogs
   Sidebar.qml           # Word list, search/add, context menu
   TranslationView.qml   # Definition display, Arabic RTL, audio playback
@@ -124,6 +129,7 @@ tests/
   test_vocabmanager.cpp  # VocabManager unit tests (Catch2)
   test_networkclient.cpp # NetworkClient unit tests (Catch2)
   test_pdfexporter.cpp   # PdfExporter unit tests (Catch2)
+  test_jsonexporter.cpp  # JsonExporter unit tests (Catch2)
 packaging/
   orvocapp.desktop       # Linux desktop entry
   orvocapp-wrapper.sh    # Runtime environment wrapper
@@ -153,6 +159,21 @@ packaging/
 
 - English lookups call Merriam-Webster's Collegiate API (~**1000 req/day** shared daily quota, requires a free key). Arabic via GTX is separate and effectively unlimited.
 - Pronunciation clips come from `media.merriam-webster.com/soundc11/` (`.wav`); audio is played via QtMultimedia (FFmpeg backend).
+
+## Definition Caching
+
+To stay within MW's daily quota, every successful definition lookup (word + phonetic + audio URL) is cached to `dictionary_cache.json` under the app's data directory, keyed by lowercased word. The cache is shared by every lookup path:
+
+- **Sidebar / word lookup** -- cache-first: checks the cache before calling MW; only fetches live on a cache miss.
+- **PDF export** -- same cache-first behavior per word; a word not yet cached is fetched and cached before rendering.
+- **JSON export** -- `words` + a `definitions` map (English definition HTML only -- no translation or pronunciation) are written instantly from whatever's cached. Exporting via the toolbar's JSON option additionally fetches any definitions still missing from the cache (reusing the same progress UI as PDF export) and tolerates per-word fetch failures -- a word that can't be fetched is still included in `words`, just without a `definitions` entry, so one bad word never fails the whole export.
+- **JSON import** -- re-hydrates the cache from an imported file's `definitions` map (overwriting any existing local entries for those words), so a shared/exported word bank doesn't need to re-spend quota on words it already has definitions for.
+- **Text export/import** -- unaffected; always a plain word list with no cache interaction.
+- **Removing a word** -- also evicts its cached definition, so deleting and re-adding a word forces a fresh MW lookup.
+
+## Failure Logging
+
+Every definition/translation fetch failure (network error, parse error, or a word that exhausted all retries) is recorded to `app.log` under the app's data directory, with a timestamp, the word, which phase (definition/translation), and the error. The log is truncated at the start of every app launch, so it always reflects only the current session -- useful for diagnosing a failed export after the fact (e.g. distinguishing an MW parsing bug from a GTX rate-limit from a plain connectivity drop) without attaching a debugger.
 
 ## License
 
