@@ -8,6 +8,7 @@
 #include <QSplashScreen>
 #include "vocabmanager.h"
 #include "networkclient.h"
+#include "applogger.h"
 
 int main(int argc, char *argv[])
 {
@@ -15,6 +16,7 @@ int main(int argc, char *argv[])
     QQuickStyle::setStyle("Fusion");
     app.setOrganizationName("orVocApp");
     app.setApplicationName("orVocApp");
+    AppLogger::clear();
     QIcon appIcon;
     for (const auto &res : {":/qt/qml/orvocapp/icon_16.png",
                             ":/qt/qml/orvocapp/icon_32.png",
