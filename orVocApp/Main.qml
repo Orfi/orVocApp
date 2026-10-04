@@ -8,6 +8,8 @@ ApplicationWindow {
     id: root
     width: 900
     height: 600
+    minimumWidth: 600
+    minimumHeight: 400
     visible: true
     title: "orVocApp"
 
