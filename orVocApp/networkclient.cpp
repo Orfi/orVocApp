@@ -143,7 +143,7 @@ void NetworkClient::fetchTranslation(const QString &word)
 {
     QUrl url("https://translate.googleapis.com/translate_a/single");
     QUrlQuery query;
-    query.addQueryItem("client", "gtx");
+    query.addQueryItem("client", "dict-chrome-ex");
     query.addQueryItem("sl", "en");
     query.addQueryItem("tl", "ar");
     query.addQueryItem("dt", "t");
