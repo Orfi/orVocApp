@@ -50,11 +50,12 @@ Rectangle {
 
         function onDefinitionReady(html) {
             validationTimeout.stop();
-            VocabManager.addWord(sidebar.pendingWord);
-            searchField.text = "";
-            sidebar.selectAndScrollTo(sidebar.pendingWord);
+            var word = sidebar.pendingWord;
             sidebar.validating = false;
             sidebar.pendingWord = "";
+            VocabManager.addWord(word);
+            searchField.text = "";
+            sidebar.selectAndScrollTo(word);
         }
 
         function onRequestFailed(area, errorString) {
