@@ -13,6 +13,37 @@ static const qreal kHeaderHeight = 40.0;
 static const qreal kFooterHeight = 30.0;
 static const qreal kEntrySpacing = 16.0;
 
+// Builds the inline HTML for one entry. Empty phonetic/definition/translation
+// blocks are omitted so a word exported without fetched data renders as a bare
+// word instead of leaving blank lines and an empty RTL box.
+static QString entryHtml(const WordEntry &entry)
+{
+    QString html = QString(
+        "<div style='font-family: Georgia, serif; color: #000;'>"
+        "<p style='font-size: 18px; font-weight: bold; color: #000; margin: 0;'>%1</p>")
+        .arg(entry.word.toHtmlEscaped());
+
+    if (!entry.phonetic.isEmpty()) {
+        html += QString("<p style='font-size: 11px; color: #666; margin: 2px 0 8px 0;'>%1</p>")
+                    .arg(entry.phonetic.toHtmlEscaped());
+    }
+
+    if (!entry.definitionHtml.isEmpty()) {
+        html += QString("<div style='color: #222;'>%1</div>").arg(entry.definitionHtml);
+    }
+
+    if (!entry.translationHtml.isEmpty()) {
+        html += QString(
+            "<div style='margin-top: 8px; padding: 6px 10px; background: #f8f8f8; "
+            "border: 1px solid #ddd; border-radius: 4px; text-align: right; "
+            "direction: rtl; font-size: 15px; color: #000;'>%1</div>")
+            .arg(entry.translationHtml);
+    }
+
+    html += "</div>";
+    return html;
+}
+
 PdfExporter::PdfExporter(const QStringList &words,
                          QPageSize::PageSizeId pageSize,
                          QObject *parent)
@@ -210,21 +241,7 @@ qreal PdfExporter::measureWordEntry(const WordEntry &entry, const QRectF &pageRe
     QTextDocument doc;
     doc.setTextWidth(contentWidth);
 
-    QString html = QString(
-        "<div style='font-family: Georgia, serif; color: #000;'>"
-        "<p style='font-size: 18px; font-weight: bold; color: #000; margin: 0;'>%1</p>"
-        "<p style='font-size: 11px; color: #666; margin: 2px 0 8px 0;'>%2</p>"
-        "<div style='color: #222;'>%3</div>"
-        "<div style='margin-top: 8px; padding: 6px 10px; background: #f8f8f8; "
-        "border: 1px solid #ddd; border-radius: 4px; text-align: right; "
-        "direction: rtl; font-size: 15px; color: #000;'>%4</div>"
-        "</div>")
-        .arg(entry.word.toHtmlEscaped(),
-             entry.phonetic.toHtmlEscaped(),
-             entry.definitionHtml,
-             entry.translationHtml);
-
-    doc.setHtml(html);
+    doc.setHtml(entryHtml(entry));
     return doc.size().height() + kEntrySpacing;
 }
 
@@ -235,21 +252,7 @@ qreal PdfExporter::drawWordEntry(QPainter &painter, const WordEntry &entry, qrea
     QTextDocument doc;
     doc.setTextWidth(contentWidth);
 
-    QString html = QString(
-        "<div style='font-family: Georgia, serif; color: #000;'>"
-        "<p style='font-size: 18px; font-weight: bold; color: #000; margin: 0;'>%1</p>"
-        "<p style='font-size: 11px; color: #666; margin: 2px 0 8px 0;'>%2</p>"
-        "<div style='color: #222;'>%3</div>"
-        "<div style='margin-top: 8px; padding: 6px 10px; background: #f8f8f8; "
-        "border: 1px solid #ddd; border-radius: 4px; text-align: right; "
-        "direction: rtl; font-size: 15px; color: #000;'>%4</div>"
-        "</div>")
-        .arg(entry.word.toHtmlEscaped(),
-             entry.phonetic.toHtmlEscaped(),
-             entry.definitionHtml,
-             entry.translationHtml);
-
-    doc.setHtml(html);
+    doc.setHtml(entryHtml(entry));
 
     painter.save();
     painter.translate(0, yPos);

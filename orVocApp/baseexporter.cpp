@@ -64,6 +64,7 @@ void BaseExporter::fetchNextWord()
 
     m_currentPhase = FetchPhase::Definition;
     m_retryAttempt = 0;
+    m_currentWordHadNetwork = false;
 
     // Serve the definition from cache when available — avoids re-spending MW's
     // 1000 req/day quota on words already fetched in this or a prior export.
@@ -87,6 +88,7 @@ void BaseExporter::issueCurrentRequest()
         return;
     }
 
+    m_currentWordHadNetwork = true;
     const QString &word = m_words[m_currentIndex];
 
     QNetworkRequest request;
@@ -186,21 +188,26 @@ void BaseExporter::scheduleRetryOrFail()
     }
 
     if (m_retryAttempt >= kMaxRetries) {
-        // Exhausted retries for this word's definition. Exporters that tolerate
-        // a missing definition (e.g. JsonExporter) still include the bare word
-        // and move on; others hard-fail the whole export — no partial output
-        // exists yet (render phase hasn't started).
-        const QString phaseName = (m_currentPhase == FetchPhase::Definition) ? "definition" : "translation";
+        // Exhausted retries for the current leg. Exporters that tolerate per-word
+        // failures (e.g. JsonExporter, PdfExporter) still include the bare word
+        // with whatever data succeeded and move on; others hard-fail the whole
+        // export — no partial output exists yet (render phase hasn't started).
+        const bool isDefinition = (m_currentPhase == FetchPhase::Definition);
+        const QString phaseName = isDefinition ? "definition" : "translation";
         const QString &word = m_words[m_currentIndex];
 
-        if (m_currentPhase == FetchPhase::Definition && continueOnWordFailure()) {
+        if (continueOnWordFailure()) {
             AppLogger::log(QString("export: giving up on %1 for '%2' after %3 attempts — "
-                                    "skipping definition, word still included")
+                                    "skipping %1, word still included")
                                .arg(phaseName, word)
                                .arg(kMaxRetries));
             WordEntry &entry = m_entries[m_currentIndex];
-            entry.definitionHtml.clear();
-            entry.phonetic.clear();
+            if (isDefinition) {
+                entry.definitionHtml.clear();
+                entry.phonetic.clear();
+            } else {
+                entry.translationHtml.clear();
+            }
             entry.valid = true;
             advanceWord();
             return;
@@ -223,7 +230,10 @@ void BaseExporter::advanceWord()
 {
     emit progress(m_currentIndex + 1, m_words.size());
     m_currentIndex++;
-    QTimer::singleShot(kInterWordDelayMs, this, &BaseExporter::fetchNextWord);
+    // Only pace against the API when this word actually hit the network; a word
+    // served entirely from the local cache has nothing to throttle.
+    const int delay = m_currentWordHadNetwork ? kInterWordDelayMs : 0;
+    QTimer::singleShot(delay, this, &BaseExporter::fetchNextWord);
 }
 
 void BaseExporter::startRender()

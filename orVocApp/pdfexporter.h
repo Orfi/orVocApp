@@ -51,6 +51,15 @@ public:
      */
     static QColor letterColor(int letterIndex);
 
+protected:
+    /**
+     * @brief Tolerates per-word fetch failures rather than aborting the export.
+     * @return Always true — a word whose definition and/or translation cannot be
+     *         fetched is still rendered from whatever data succeeded (a bare word
+     *         if nothing did), matching JsonExporter's failure behaviour.
+     */
+    bool continueOnWordFailure() const override { return true; }
+
 private:
     void drawCoverPage(QPainter &painter, int wordCount, const QRectF &pageRect);
     void drawPageHeader(QPainter &painter, QChar letter, int letterIndex, const QRectF &pageRect);

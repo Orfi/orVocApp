@@ -16,15 +16,18 @@ class QThread;
  * @brief One word's fetched dictionary and translation data, ready for rendering.
  *
  * Populated incrementally by BaseExporter during the fetch phase. An entry is
- * considered renderable only when @ref valid is true, which requires both a
- * successful dictionary response and a successful translation response.
+ * considered renderable when @ref valid is true. For a strict exporter this
+ * requires both a successful dictionary response and a successful translation
+ * response; for one that tolerates per-word failure (see
+ * @ref continueOnWordFailure) @ref valid may be true with partial or no data,
+ * and the empty fields simply render as a bare word.
  */
 struct WordEntry {
     QString word;              ///< The source word being exported.
     QString phonetic;          ///< Phonetic transcription (e.g. "/həˈloʊ/"), empty if none.
     QString definitionHtml;    ///< HTML-formatted English definitions from the dictionary API.
     QString translationHtml;   ///< HTML-formatted RTL-wrapped Arabic translation.
-    bool valid = false;        ///< True iff both dictionary and translation fetches succeeded.
+    bool valid = false;        ///< True when the entry is renderable (see type docs).
 };
 
 /**
@@ -36,12 +39,15 @@ struct WordEntry {
  *     request carries a @ref kTransferTimeoutMs transfer timeout and is retried up
  *     to @ref kMaxRetries times with exponential backoff (see @ref retryBackoffMs)
  *     on any network/parse failure. If retries are exhausted for a single word, the
- *     whole export hard-fails via @ref finished with @c success=false — the pipeline
- *     never silently drops words from the output. A @ref kInterWordDelayMs throttle
- * is applied between consecutive words to stay under Merriam-Webster's request
- *     pacing / daily quota limits. Subclasses control the shape of this pipeline
+ *     outcome depends on @ref continueOnWordFailure: by default the whole export
+ *     hard-fails via @ref finished with @c success=false, but tolerating exporters
+ *     (e.g. JsonExporter, PdfExporter) include the bare word with whatever data
+ *     succeeded and continue. A @ref kInterWordDelayMs throttle is applied between
+ *     consecutive words that actually hit the network, to stay under Merriam-Webster's
+ *     request pacing / daily quota limits; words served entirely from the local
+ *     cache skip the throttle. Subclasses control the shape of this pipeline
  *     via @ref needsTranslation (skip the translation leg entirely) and
- *     @ref continueOnWordFailure (tolerate a missing definition instead of
+ *     @ref continueOnWordFailure (tolerate a per-word failure instead of
  *     hard-failing the whole export).
  *  2. Render phase — spawns a QThread that calls the subclass-provided
  *     @ref renderToFile implementation with the successfully-fetched entries.
@@ -94,9 +100,11 @@ public:
      */
     bool isCancelled() const { return m_cancelled.load(std::memory_order_acquire); }
 
-    /// @brief Delay between finishing one word's fetch pair and starting the next,
+    /// @brief Delay between finishing one word's fetch and starting the next,
     /// in milliseconds. Paces requests to Merriam-Webster's Collegiate API;
-    /// keep ≥ ~1000 to stay within quota/rate limits.
+    /// keep ≥ ~1000 to stay within quota/rate limits. Applied only when the
+    /// current word issued at least one network request — words served
+    /// entirely from the local cache advance without delay.
     static constexpr int kInterWordDelayMs = 1000;
 
     /// @brief Maximum retry attempts per network request before failing the whole export.
@@ -171,13 +179,14 @@ protected:
     virtual bool needsTranslation() const { return true; }
 
     /**
-     * @brief Whether a word's fetch failure (after exhausting retries) should
-     *        hard-fail the whole export, or be skipped so the export still
-     *        completes with that word's definition simply left empty.
-     * @return False (default) — hard-fail, matching PdfExporter's "never
-     *         silently drop words" policy. Override to return true for
-     *         exporters where a missing definition is an acceptable partial
-     *         result (e.g. JsonExporter, which still writes the bare word).
+     * @brief Whether a word's fetch failure (after exhausting retries on either
+     *        the definition or the translation leg) should hard-fail the whole
+     *        export, or be tolerated so the export still completes with that
+     *        word rendered from whatever data succeeded.
+     * @return False (default) — hard-fail. Override to return true for exporters
+     *         where a missing definition/translation is an acceptable partial
+     *         result and the bare word should still appear (e.g. JsonExporter,
+     *         PdfExporter).
      */
     virtual bool continueOnWordFailure() const { return false; }
 
@@ -190,7 +199,7 @@ private:
     void onReplyFinished(QNetworkReply *reply); ///< Handles dict or translation reply based on m_currentPhase.
     void onDefinitionReady();     ///< Advances to the translation leg, or marks the word done if none is needed.
     void scheduleRetryOrFail();   ///< Schedules a backoff retry of issueCurrentRequest, or hard-fails the export.
-    void advanceWord();           ///< Emits progress, clears retry state, schedules next word via the 150ms throttle.
+    void advanceWord();           ///< Emits progress, clears retry state, schedules next word (throttled unless fully cached).
     void startRender();
 
     QStringList m_words;
@@ -203,6 +212,7 @@ private:
 
     FetchPhase m_currentPhase = FetchPhase::Definition;
     int m_retryAttempt = 0;       ///< Retries already attempted for the current leg (0..kMaxRetries).
+    bool m_currentWordHadNetwork = false; ///< True if the current word issued any network request (suppresses the cache-skip throttle).
 };
 
 #endif // BASEEXPORTER_H

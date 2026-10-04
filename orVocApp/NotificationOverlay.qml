@@ -45,7 +45,7 @@ Item {
         exporting = false;
         activeExporter = null;
         showNotification(
-            success ? "PDF exported successfully" : "Export failed",
+            success ? "Exported successfully" : "Export failed",
             !success
         );
     }
